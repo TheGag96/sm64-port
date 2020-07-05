@@ -183,7 +183,7 @@ void update_sliding_angle(struct MarioState *m, f32 accel, f32 lossFactor) {
         if ((newFacingDYaw -= 0x200) < 0) {
             newFacingDYaw = 0;
         }
-    } else if (newFacingDYaw > -0x4000 && newFacingDYaw < 0) {
+    } else if (newFacingDYaw >= -0x4000 && newFacingDYaw < 0) {
         if ((newFacingDYaw += 0x200) > 0) {
             newFacingDYaw = 0;
         }
@@ -215,6 +215,13 @@ void update_sliding_angle(struct MarioState *m, f32 accel, f32 lossFactor) {
 
     if (newFacingDYaw < -0x4000 || newFacingDYaw > 0x4000) {
         m->forwardVel *= -1.0f;
+
+        if (m->action == ACT_ROLL) {
+            m->faceAngle[1] += 0x4000;
+            if (m->faceAngle[1] > 0x8000) {
+                m->faceAngle[1] -= 0x8000;
+            }
+        }
     }
 }
 
@@ -256,6 +263,8 @@ s32 update_sliding(struct MarioState *m, f32 stopSpeed) {
             lossFactor = m->intendedMag / 32.0f * forward * 0.02f + 0.92f;
             break;
     }
+
+    if (m->action == ACT_ROLL) lossFactor *= 1.04;
 
     oldSpeed = sqrtf(m->slideVelX * m->slideVelX + m->slideVelZ * m->slideVelZ);
 
@@ -1492,6 +1501,11 @@ s32 act_crouch_slide(struct MarioState *m) {
         return set_mario_action(m, ACT_BRAKING, 0);
     }
 
+    if (m->controller->buttonPressed & R_TRIG) {
+        mario_set_forward_vel(m, max(32, m->forwardVel));
+        return set_mario_action(m, ACT_ROLL, 0);
+    }
+
     cancel = common_slide_action_with_jump(m, ACT_CROUCHING, ACT_JUMP, ACT_FREEFALL,
                                            MARIO_ANIM_START_CROUCHING);
     return cancel;
@@ -1525,6 +1539,47 @@ s32 act_slide_kick_slide(struct MarioState *m) {
 
     play_sound(SOUND_MOVING_TERRAIN_SLIDE + m->terrainSoundAddend, m->marioObj->header.gfx.cameraToObject);
     m->particleFlags |= PARTICLE_DUST;
+    return FALSE;
+}
+
+s32 act_roll(struct MarioState *m) {
+    #define MAX_NORMAL_ROLL_SPEED       48.0f
+    #define ROLL_CANCEL_LOCKOUT_TIME    10
+
+    if (m->actionTimer > ROLL_CANCEL_LOCKOUT_TIME) {
+        if (!(m->input & INPUT_Z_DOWN))
+            return set_mario_action(m, ACT_WALKING, 0);
+
+        if (m->input & INPUT_B_PRESSED)
+            return set_jumping_action(m, ACT_FORWARD_ROLLOUT, 0);
+    }
+
+    if (m->input & INPUT_A_PRESSED)
+        return set_jumping_action(m, ACT_LONG_JUMP, 0);
+
+    if (m->controller->buttonPressed & R_TRIG && m->actionTimer > 0) {
+        // m->vel[1] = 15;
+
+        if (m->forwardVel < MAX_NORMAL_ROLL_SPEED) {
+            mario_set_forward_vel(m, min(m->forwardVel + 5, MAX_NORMAL_ROLL_SPEED));
+        }
+
+        play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
+    }
+
+    set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
+
+    if (update_sliding(m, 4.0f))
+        return set_mario_action(m, ACT_STOMACH_SLIDE_STOP, 0);
+
+    common_slide_action(m, ACT_STOMACH_SLIDE_STOP, ACT_FREEFALL, MARIO_ANIM_FORWARD_SPINNING);
+
+    // if (m->forwardVel > MAX_NORMAL_ROLL_SPEED) {
+    //     mario_set_forward_vel(m, MAX_NORMAL_ROLL_SPEED);
+    // }
+
+    m->actionTimer++;
+
     return FALSE;
 }
 
@@ -1572,6 +1627,10 @@ s32 act_dive_slide(struct MarioState *m) {
 #endif
         return set_mario_action(m, m->forwardVel > 0.0f ? ACT_FORWARD_ROLLOUT : ACT_BACKWARD_ROLLOUT,
                                 0);
+    }
+
+    if (!(m->input & INPUT_ABOVE_SLIDE) && (m->input & INPUT_Z_DOWN)) {
+        return set_mario_action(m, ACT_ROLL, 0);
     }
 
     play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_BODY_HIT_GROUND);
@@ -1864,6 +1923,9 @@ s32 act_long_jump_land(struct MarioState *m) {
     if (!(m->input & INPUT_Z_DOWN)) {
         m->input &= ~INPUT_A_PRESSED;
     }
+    else if (m->forwardVel > 15.0f) {
+        return set_mario_action(m, ACT_ROLL, 0);
+    }
 
     if (common_landing_cancels(m, &sLongJumpLandAction, set_jumping_action)) {
         return TRUE;
@@ -2013,6 +2075,7 @@ s32 mario_execute_moving_action(struct MarioState *m) {
         case ACT_MOVE_PUNCHING:            cancel = act_move_punching(m);            break;
         case ACT_CROUCH_SLIDE:             cancel = act_crouch_slide(m);             break;
         case ACT_SLIDE_KICK_SLIDE:         cancel = act_slide_kick_slide(m);         break;
+        case ACT_ROLL:                     cancel = act_roll(m);                     break;
         case ACT_HARD_BACKWARD_GROUND_KB:  cancel = act_hard_backward_ground_kb(m);  break;
         case ACT_HARD_FORWARD_GROUND_KB:   cancel = act_hard_forward_ground_kb(m);   break;
         case ACT_BACKWARD_GROUND_KB:       cancel = act_backward_ground_kb(m);       break;

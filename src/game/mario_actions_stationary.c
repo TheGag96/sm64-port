@@ -565,6 +565,11 @@ s32 act_crouching(struct MarioState *m) {
         return set_mario_action(m, ACT_PUNCHING, 9);
     }
 
+    if (m->controller->buttonPressed & R_TRIG) {
+        mario_set_forward_vel(m, 32.0f);
+        return set_mario_action(m, ACT_ROLL, 0);
+    }
+
     stationary_ground_step(m);
     set_mario_animation(m, MARIO_ANIM_CROUCHING);
     return 0;
@@ -1056,6 +1061,15 @@ s32 act_ground_pound_land(struct MarioState *m) {
 
     if (m->input & INPUT_ABOVE_SLIDE) {
         return set_mario_action(m, ACT_BUTT_SLIDE, 0);
+    }
+
+    if (m->input & INPUT_A_PRESSED) {
+        return set_jumping_action(m, ACT_TRIPLE_JUMP, 0);
+    }
+
+    if (m->controller->buttonPressed & R_TRIG) {
+        mario_set_forward_vel(m, 60);
+        return set_mario_action(m, ACT_ROLL, 0);
     }
 
     landing_step(m, MARIO_ANIM_GROUND_POUND_LANDING, ACT_BUTT_SLIDE_STOP);
