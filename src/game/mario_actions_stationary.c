@@ -1064,7 +1064,7 @@ s32 act_ground_pound_land(struct MarioState *m) {
     }
 
     if (m->input & INPUT_A_PRESSED) {
-        return set_jumping_action(m, ACT_TRIPLE_JUMP, 0);
+        return set_jumping_action(m, ACT_GROUND_POUND_JUMP, 0);
     }
 
     if (m->controller->buttonPressed & R_TRIG) {

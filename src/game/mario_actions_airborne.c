@@ -2059,6 +2059,37 @@ s32 act_special_triple_jump(struct MarioState *m) {
     return FALSE;
 }
 
+s32 act_ground_pound_jump(struct MarioState *m) {
+    #define TWIRL_RATE 0x1800
+
+    if (check_kick_or_dive_in_air(m)) {
+        return TRUE;
+    }
+
+    if (m->input & INPUT_Z_PRESSED) {
+        return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m->actionTimer == 0) {
+        m->spareFloat = 0;
+    }
+    else if (m->actionTimer == 1) {
+        play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
+    }
+
+    play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAHOO);
+
+    common_air_action_step(m, ACT_JUMP_LAND, MARIO_ANIM_SINGLE_JUMP,
+                           AIR_STEP_CHECK_LEDGE_GRAB | AIR_STEP_CHECK_HANG);
+
+    m->spareFloat += (0x10000*1.0f - m->spareFloat) / 5.0f;
+    m->marioObj->header.gfx.angle[1] -= (s16) m->spareFloat;
+
+    m->actionTimer++;
+
+    return FALSE;
+}
+
 s32 check_common_airborne_cancels(struct MarioState *m) {
     if (m->pos[1] < m->waterLevel - 100) {
         return set_water_plunge_action(m);
@@ -2133,6 +2164,7 @@ s32 mario_execute_airborne_action(struct MarioState *m) {
         case ACT_TOP_OF_POLE_JUMP:     cancel = act_top_of_pole_jump(m);     break;
         case ACT_VERTICAL_WIND:        cancel = act_vertical_wind(m);        break;
         case ACT_WALL_SLIDE:           cancel = act_wall_slide(m);           break;
+        case ACT_GROUND_POUND_JUMP:    cancel = act_ground_pound_jump(m);    break;
     }
     /* clang-format on */
 
