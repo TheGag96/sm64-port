@@ -264,7 +264,7 @@ s32 update_sliding(struct MarioState *m, f32 stopSpeed) {
             break;
     }
 
-    if (m->action == ACT_ROLL) lossFactor *= 1.04;
+    if (m->action == ACT_ROLL) lossFactor *= 1.045;
 
     oldSpeed = sqrtf(m->slideVelX * m->slideVelX + m->slideVelZ * m->slideVelZ);
 
@@ -463,11 +463,11 @@ void update_walking_speed(struct MarioState *m) {
     } else if (m->forwardVel <= targetSpeed) {
         m->forwardVel += 1.1f - m->forwardVel / 43.0f;
     } else if (m->floor->normal.y >= 0.95f) {
-        m->forwardVel -= 1.0f;
+        m->forwardVel -= 0.5f;
     }
 
-    if (m->forwardVel > 48.0f) {
-        m->forwardVel = 48.0f;
+    if (m->forwardVel > 60.0f) {
+        m->forwardVel = 60.0f;
     }
 
 	if (analog_stick_held_back(m)) {
