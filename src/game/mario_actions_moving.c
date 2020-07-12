@@ -261,15 +261,20 @@ s32 update_sliding(struct MarioState *m, f32 stopSpeed) {
             break;
     }
 
-    if (m->action == ACT_ROLL) lossFactor *= 1.045;
+    if (m->action == ACT_ROLL) lossFactor *= 1.046;
 
     oldSpeed = sqrtf(m->slideVelX * m->slideVelX + m->slideVelZ * m->slideVelZ);
 
-    //! This is attempting to use trig derivatives to rotate Mario's speed.
-    // It is slightly off/asymmetric since it uses the new X speed, but the old
-    // Z speed.
-    m->slideVelX += m->slideVelZ * (m->intendedMag / 32.0f) * sideward * 0.05f;
-    m->slideVelZ -= m->slideVelX * (m->intendedMag / 32.0f) * sideward * 0.05f;
+
+    //! This is uses trig derivatives to rotate Mario's speed.
+    // In vanilla, it was slightly off/asymmetric since it uses the new X speed, but the old
+    // Z speed. I've gone and fixed it here.
+    f32 angleChange  = (m->intendedMag / 32.0f) * (m->action == ACT_ROLL ? 0.5f : 1.0f),
+        modSlideVelX = m->slideVelZ * angleChange * sideward * 0.05f,
+        modSlideVelZ = m->slideVelX * angleChange * sideward * 0.05f;
+
+    m->slideVelX += modSlideVelX;
+    m->slideVelZ -= modSlideVelZ;
 
     newSpeed = sqrtf(m->slideVelX * m->slideVelX + m->slideVelZ * m->slideVelZ);
 
@@ -1548,11 +1553,20 @@ s32 act_slide_kick_slide(struct MarioState *m) {
 }
 
 s32 act_roll(struct MarioState *m) {
-    #define MAX_NORMAL_ROLL_SPEED       48.0f
+    #define MAX_NORMAL_ROLL_SPEED       50.0f
+    #define ROLL_BOOST_GAIN             8.0f
     #define ROLL_CANCEL_LOCKOUT_TIME    10
+    #define BOOST_LOCKOUT_TIME          20
+
+    //m->spareFloat  is used for Mario's rotation angle during the roll (persists when going into ACT_ROLL_AIR and back)
+    //m->spareInt    is used for the boost lockout timer (persists when going into ACT_ROLL_AIR and back)
+    //m->actionTimer is used to lockout walk canceling out of rollout (reset each action switch)
 
     if (m->actionTimer == 0) {
-        m->spareFloat = 0;
+        if (m->prevAction != ACT_ROLL_AIR) {
+            m->spareFloat = 0;
+            m->spareInt   = 0;
+        }
     }
     else if (m->actionTimer > ROLL_CANCEL_LOCKOUT_TIME) {
         if (!(m->input & INPUT_Z_DOWN))
@@ -1565,26 +1579,38 @@ s32 act_roll(struct MarioState *m) {
     if (m->input & INPUT_A_PRESSED)
         return set_jumping_action(m, ACT_LONG_JUMP, 0);
 
-    if (m->controller->buttonPressed & R_TRIG && m->actionTimer > 0) {
-        // m->vel[1] = 15;
+    if (m->controller->buttonPressed & R_TRIG) {
+        m->vel[1] = 20.0f;
+        play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
 
-        if (m->forwardVel < MAX_NORMAL_ROLL_SPEED) {
-            mario_set_forward_vel(m, min(m->forwardVel + 5, MAX_NORMAL_ROLL_SPEED));
+        if (m->spareInt >= BOOST_LOCKOUT_TIME) {
+            m->spareInt = 0;
+
+            if (m->forwardVel < MAX_NORMAL_ROLL_SPEED) {
+                mario_set_forward_vel(m, min(m->forwardVel + ROLL_BOOST_GAIN, MAX_NORMAL_ROLL_SPEED));
+            }
+
+            m->particleFlags |= PARTICLE_HORIZONTAL_STAR;
+
+            //! playing this after the call to play_mario_sound seems to matter in making this sound play
+            play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
         }
 
-        play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
+        return set_jumping_action(m, ACT_ROLL_AIR, 0);
     }
 
     set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
 
-    if (update_sliding(m, 4.0f))
-        return set_mario_action(m, ACT_STOMACH_SLIDE_STOP, 0);
+    if (update_sliding(m, 10.0f))
+        return set_mario_action(m, ACT_CROUCH_SLIDE, 0);
 
-    common_slide_action(m, ACT_STOMACH_SLIDE_STOP, ACT_FREEFALL, MARIO_ANIM_FORWARD_SPINNING);
+    common_slide_action(m, ACT_CROUCH_SLIDE, ACT_ROLL_AIR, MARIO_ANIM_FORWARD_SPINNING);
 
     m->spareFloat += 0x80 * m->forwardVel;
     if (m->spareFloat > 0x10000) m->spareFloat -= 0x10000;
     set_anim_to_frame(m, 10 * m->spareFloat / 0x10000);
+
+    m->spareInt++;
 
     // if (m->forwardVel > MAX_NORMAL_ROLL_SPEED) {
     //     mario_set_forward_vel(m, MAX_NORMAL_ROLL_SPEED);
@@ -1647,7 +1673,7 @@ s32 act_dive_slide(struct MarioState *m) {
         }
         else if (m->input & INPUT_B_PRESSED) {
             //dive hop
-            m->vel[1] = 20.0f;
+            m->vel[1] = 25.0f;
             return set_mario_action(m, ACT_DIVE, 1);
         }
     }

@@ -225,7 +225,9 @@ void update_air_without_turn(struct MarioState *m) {
             intendedMag = m->intendedMag / 32.0f;
 
             m->forwardVel += intendedMag * coss(intendedDYaw) * 1.5f;
-            sidewaysSpeed = intendedMag * sins(intendedDYaw) * 10.0f;
+            if (m->action != ACT_ROLL_AIR) {
+                sidewaysSpeed = intendedMag * sins(intendedDYaw) * 10.0f;
+            }
         }
 
         //! Uncapped air speed. Net positive when moving forward.
@@ -250,8 +252,6 @@ void update_air_without_turn(struct MarioState *m) {
 void update_air_no_control(struct MarioState *m) {
     f32 sidewaysSpeed = 0.0f;
     f32 dragThreshold;
-    s16 intendedDYaw;
-    f32 intendedMag;
 
     if (!check_horizontal_wind(m)) {
         dragThreshold = m->action == ACT_LONG_JUMP ? 48.0f : 32.0f;
@@ -2127,6 +2127,27 @@ s32 act_ground_pound_jump(struct MarioState *m) {
     return FALSE;
 }
 
+s32 act_roll_air(struct MarioState *m) {
+    #define MAX_NORMAL_ROLL_SPEED       50.0f
+
+    if (m->actionTimer == 0) {
+        if (m->prevAction != ACT_ROLL) {
+            m->spareFloat = 0;
+            m->spareInt   = 0;
+        }
+    }
+
+    common_air_action_step(m, ACT_ROLL, MARIO_ANIM_FORWARD_SPINNING, 0);
+
+    m->spareFloat += 0x80 * m->forwardVel;
+    if (m->spareFloat > 0x10000) m->spareFloat -= 0x10000;
+    set_anim_to_frame(m, 10 * m->spareFloat / 0x10000);
+
+    m->spareInt++;
+
+    return FALSE;
+}
+
 s32 check_common_airborne_cancels(struct MarioState *m) {
     if (m->pos[1] < m->waterLevel - 100) {
         return set_water_plunge_action(m);
@@ -2202,6 +2223,7 @@ s32 mario_execute_airborne_action(struct MarioState *m) {
         case ACT_VERTICAL_WIND:        cancel = act_vertical_wind(m);        break;
         case ACT_WALL_SLIDE:           cancel = act_wall_slide(m);           break;
         case ACT_GROUND_POUND_JUMP:    cancel = act_ground_pound_jump(m);    break;
+        case ACT_ROLL_AIR:             cancel = act_roll_air(m);             break;
     }
     /* clang-format on */
 

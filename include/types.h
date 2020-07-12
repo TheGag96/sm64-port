@@ -345,6 +345,7 @@ struct MarioState
     /*0xC0*/ f32 quicksandDepth;
     /*0xC4*/ f32 unkC4;
     /*0xC8*/ f32 spareFloat;
+    /*0xCC*/ s32 spareInt;
 };
 
 #endif // TYPES_H
