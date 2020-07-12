@@ -218,9 +218,6 @@ void update_sliding_angle(struct MarioState *m, f32 accel, f32 lossFactor) {
 
         if (m->action == ACT_ROLL) {
             m->faceAngle[1] += 0x4000;
-            if (m->faceAngle[1] > 0x8000) {
-                m->faceAngle[1] -= 0x8000;
-            }
         }
     }
 }
@@ -463,12 +460,20 @@ void update_walking_speed(struct MarioState *m) {
     } else if (m->forwardVel <= targetSpeed) {
         m->forwardVel += 1.1f - m->forwardVel / 43.0f;
     } else if (m->floor->normal.y >= 0.95f) {
-        m->forwardVel -= 0.5f;
+        m->forwardVel -= (m->prevAction == ACT_ROLL ? 0.5f : 1.0f);
     }
 
-    if (m->forwardVel > 60.0f) {
-        m->forwardVel = 60.0f;
+    if (m->prevAction == ACT_ROLL) {
+        if (m->forwardVel > 60.0f) {
+            m->forwardVel = 60.0f;
+        }
     }
+    else {
+        if (m->forwardVel > 48.0f) {
+            m->forwardVel = 48.0f;
+        }
+    }
+
 
 	if (analog_stick_held_back(m)) {
         m->faceAngle[1] = m->intendedYaw;
@@ -1546,13 +1551,16 @@ s32 act_roll(struct MarioState *m) {
     #define MAX_NORMAL_ROLL_SPEED       48.0f
     #define ROLL_CANCEL_LOCKOUT_TIME    10
 
-    if (m->actionTimer > ROLL_CANCEL_LOCKOUT_TIME) {
+    if (m->actionTimer == 0) {
+        m->spareFloat = 0;
+    }
+    else if (m->actionTimer > ROLL_CANCEL_LOCKOUT_TIME) {
         if (!(m->input & INPUT_Z_DOWN))
             return set_mario_action(m, ACT_WALKING, 0);
-
-        if (m->input & INPUT_B_PRESSED)
-            return set_jumping_action(m, ACT_FORWARD_ROLLOUT, 0);
     }
+
+    if (m->input & INPUT_B_PRESSED)
+        return set_jumping_action(m, ACT_FORWARD_ROLLOUT, 0);
 
     if (m->input & INPUT_A_PRESSED)
         return set_jumping_action(m, ACT_LONG_JUMP, 0);
@@ -1573,6 +1581,10 @@ s32 act_roll(struct MarioState *m) {
         return set_mario_action(m, ACT_STOMACH_SLIDE_STOP, 0);
 
     common_slide_action(m, ACT_STOMACH_SLIDE_STOP, ACT_FREEFALL, MARIO_ANIM_FORWARD_SPINNING);
+
+    m->spareFloat += 0x80 * m->forwardVel;
+    if (m->spareFloat > 0x10000) m->spareFloat -= 0x10000;
+    set_anim_to_frame(m, 10 * m->spareFloat / 0x10000);
 
     // if (m->forwardVel > MAX_NORMAL_ROLL_SPEED) {
     //     mario_set_forward_vel(m, MAX_NORMAL_ROLL_SPEED);
@@ -1621,7 +1633,7 @@ s32 act_hold_stomach_slide(struct MarioState *m) {
 }
 
 s32 act_dive_slide(struct MarioState *m) {
-    if (!(m->input & INPUT_ABOVE_SLIDE) && (m->input & (INPUT_A_PRESSED | INPUT_B_PRESSED))) {
+    if (!(m->input & INPUT_ABOVE_SLIDE) && (m->input & INPUT_A_PRESSED)) {
 #ifdef VERSION_SH
         queue_rumble_data(5, 80);
 #endif
@@ -1629,8 +1641,14 @@ s32 act_dive_slide(struct MarioState *m) {
                                 0);
     }
 
-    if (!(m->input & INPUT_ABOVE_SLIDE) && (m->input & INPUT_Z_DOWN)) {
-        return set_mario_action(m, ACT_ROLL, 0);
+    if (!(m->input & INPUT_ABOVE_SLIDE)) {
+        if (m->input & INPUT_Z_DOWN) {
+            return set_mario_action(m, ACT_ROLL, 0);
+        }
+        else if (m->input & INPUT_B_PRESSED) {
+            m->vel[1] = 20.0f;
+            return set_mario_action(m, ACT_DIVE, 0);
+        }
     }
 
     play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_BODY_HIT_GROUND);

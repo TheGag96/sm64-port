@@ -247,6 +247,36 @@ void update_air_without_turn(struct MarioState *m) {
     }
 }
 
+void update_air_no_control(struct MarioState *m) {
+    f32 sidewaysSpeed = 0.0f;
+    f32 dragThreshold;
+    s16 intendedDYaw;
+    f32 intendedMag;
+
+    if (!check_horizontal_wind(m)) {
+        dragThreshold = m->action == ACT_LONG_JUMP ? 48.0f : 32.0f;
+        m->forwardVel = approach_f32(m->forwardVel, 0.0f, 0.35f, 0.35f);
+
+        //! Uncapped air speed. Net positive when moving forward.
+        if (m->forwardVel > dragThreshold) {
+            m->forwardVel -= 1.0f;
+        }
+        if (m->forwardVel < -16.0f) {
+            m->forwardVel += 2.0f;
+        }
+
+        m->slideVelX = m->forwardVel * sins(m->faceAngle[1]);
+        m->slideVelZ = m->forwardVel * coss(m->faceAngle[1]);
+
+        m->slideVelX += sidewaysSpeed * sins(m->faceAngle[1] + 0x4000);
+        m->slideVelZ += sidewaysSpeed * coss(m->faceAngle[1] + 0x4000);
+
+        m->vel[0] = m->slideVelX;
+        m->vel[2] = m->slideVelZ;
+    }
+}
+
+
 void update_lava_boost_or_twirling(struct MarioState *m) {
     s16 intendedDYaw;
     f32 intendedMag;
@@ -368,7 +398,12 @@ void update_flying(struct MarioState *m) {
 u32 common_air_action_step(struct MarioState *m, u32 landAction, s32 animation, u32 stepArg) {
     u32 stepResult;
 
-    update_air_without_turn(m);
+    if (m->action == ACT_WALL_SLIDE) {
+        update_air_no_control(m);
+    }
+    else {
+        update_air_without_turn(m);
+    }
 
     stepResult = perform_air_step(m, stepArg);
     switch (stepResult) {
@@ -595,6 +630,7 @@ s32 act_side_flip(struct MarioState *m) {
     }
 
     if (m->input & INPUT_Z_PRESSED) {
+        m->marioObj->header.gfx.angle[1] -= 0x8000;
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
@@ -1356,7 +1392,6 @@ s32 act_wall_slide(struct MarioState *m) {
     }
 
     mario_set_forward_vel(m, 0.0f);
-    m->vel[1] = -15.0f;
     m->particleFlags |= PARTICLE_DUST;
 
     play_sound(SOUND_MOVING_TERRAIN_SLIDE + m->terrainSoundAddend, m->marioObj->header.gfx.cameraToObject);
@@ -2063,10 +2098,12 @@ s32 act_ground_pound_jump(struct MarioState *m) {
     #define TWIRL_RATE 0x1800
 
     if (check_kick_or_dive_in_air(m)) {
+        m->marioObj->header.gfx.angle[1] += (s16) m->spareFloat;
         return TRUE;
     }
 
     if (m->input & INPUT_Z_PRESSED) {
+        m->marioObj->header.gfx.angle[1] += (s16) m->spareFloat;
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 

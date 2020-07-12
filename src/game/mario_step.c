@@ -546,6 +546,11 @@ void apply_gravity(struct MarioState *m) {
         if (m->vel[1] < -75.0f) {
             m->vel[1] = -75.0f;
         }
+    } else if (m->action == ACT_WALL_SLIDE) {
+        m->vel[1] -= 2.0f;
+        if (m->vel[1] < -15.0f) {
+            m->vel[1] = -15.0f;
+        }
     } else if (m->action == ACT_LAVA_BOOST || m->action == ACT_FALL_AFTER_STAR_GRAB) {
         m->vel[1] -= 3.2f;
         if (m->vel[1] < -65.0f) {

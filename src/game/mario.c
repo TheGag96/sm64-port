@@ -891,6 +891,10 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
         case ACT_JUMP_KICK:
             m->vel[1] = 20.0f;
             break;
+
+        case ACT_WALL_SLIDE:
+            m->vel[1] = 0.0f;
+            break;
     }
 
     m->peakHeight = m->pos[1];
@@ -1253,6 +1257,7 @@ void debug_print_speed_action_normal(struct MarioState *m) {
 
         // STA short for "status," the official action name via SMS map.
         print_text_fmt_int(210, 56, "STA %x", (m->action & ACT_ID_MASK));
+        print_text_fmt_int(210, 40, "YSP %d", m->vel[1]);
     // }
 }
 
