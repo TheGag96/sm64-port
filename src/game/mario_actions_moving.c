@@ -1646,8 +1646,9 @@ s32 act_dive_slide(struct MarioState *m) {
             return set_mario_action(m, ACT_ROLL, 0);
         }
         else if (m->input & INPUT_B_PRESSED) {
+            //dive hop
             m->vel[1] = 20.0f;
-            return set_mario_action(m, ACT_DIVE, 0);
+            return set_mario_action(m, ACT_DIVE, 1);
         }
     }
 
