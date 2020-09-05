@@ -1202,7 +1202,12 @@ s32 set_water_plunge_action(struct MarioState *m) {
         set_camera_mode(m->area->camera, CAMERA_MODE_WATER_SURFACE, 1);
     }
 
-    return set_mario_action(m, ACT_WATER_PLUNGE, 0);
+    if (m->action == ACT_GROUND_POUND) {
+        return set_mario_action(m, ACT_WATER_GROUND_POUND, 1);
+    }
+    else {
+        return set_mario_action(m, ACT_WATER_PLUNGE, 0);
+    }
 }
 
 /**

@@ -2102,13 +2102,18 @@ s32 act_ground_pound_jump(struct MarioState *m) {
 }
 
 s32 act_roll_air(struct MarioState *m) {
-    #define MAX_NORMAL_ROLL_SPEED       50.0f
+    #define MAX_NORMAL_ROLL_SPEED        50.0f
+    #define ROLL_AIR_CANCEL_LOCKOUT_TIME 15
 
     if (m->actionTimer == 0) {
         if (m->prevAction != ACT_ROLL) {
             m->spareFloat = 0;
             m->spareInt   = 0;
         }
+    }
+
+    if (!(m->input & INPUT_Z_DOWN) && m->actionTimer >= ROLL_AIR_CANCEL_LOCKOUT_TIME) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
     set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);

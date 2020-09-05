@@ -1576,7 +1576,7 @@ s32 act_roll(struct MarioState *m) {
             m->spareInt   = 0;
         }
     }
-    else if (m->actionTimer > ROLL_CANCEL_LOCKOUT_TIME) {
+    else if (m->actionTimer >= ROLL_CANCEL_LOCKOUT_TIME) {
         if (!(m->input & INPUT_Z_DOWN))
             return set_mario_action(m, ACT_WALKING, 0);
     }
