@@ -452,6 +452,8 @@ s32 update_decelerating_speed(struct MarioState *m) {
 void update_walking_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
+    f32 firmSpeedCap = m->prevAction == ACT_ROLL ? 60.0f : 48.0f;
+    f32 hardSpeedCap = 105;
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
         maxTargetSpeed = 24.0f;
@@ -465,29 +467,28 @@ void update_walking_speed(struct MarioState *m) {
         targetSpeed *= 6.25 / m->quicksandDepth;
     }
 
+    // instead of a hard walk speed cap, going over this new firm speed cap makes you slow down to it twice as fast
+    f32 decayFactor = m->forwardVel > firmSpeedCap ? 2.0f : 1.0f;
+
     if (m->forwardVel <= 0.0f) {
         m->forwardVel += 1.1f;
     } else if (m->forwardVel <= targetSpeed) {
         m->forwardVel += 1.1f - m->forwardVel / 43.0f;
     } else if (m->floor->normal.y >= 0.95f) {
-        m->forwardVel -= (m->prevAction == ACT_ROLL ? 0.4f : 1.0f);
+        m->forwardVel -= decayFactor;
     }
 
-    if (m->prevAction == ACT_ROLL) {
-        if (m->forwardVel > 60.0f) {
-            m->forwardVel = 60.0f;
-        }
-    }
-    else {
-        if (m->forwardVel > 48.0f) {
-            m->forwardVel = 48.0f;
-        }
+    if (m->forwardVel > hardSpeedCap) {
+        m->forwardVel = hardSpeedCap;
     }
 
-
-	if (analog_stick_held_back(m)) {
+    if (analog_stick_held_back(m)) {
         m->faceAngle[1] = m->intendedYaw;
-    }
+
+        if (m->forwardVel < 0) {
+            mario_set_forward_vel(m, -m->forwardVel);
+        }
+    }\
 	else {
         m->faceAngle[1] =
             m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0xC00, 0xC00);
@@ -843,7 +844,7 @@ s32 act_walking(struct MarioState *m) {
         return set_mario_action(m, ACT_CROUCH_SLIDE, 0);
     }
 
-    m->actionState = 0;
+    // m->actionState = 0;
 
     vec3f_copy(startPos, m->pos);
     update_walking_speed(m);
@@ -1576,7 +1577,7 @@ s32 act_roll(struct MarioState *m) {
             m->spareInt   = 0;
         }
     }
-    else if (m->actionTimer >= ROLL_CANCEL_LOCKOUT_TIME) {
+    else if (m->actionTimer >= ROLL_CANCEL_LOCKOUT_TIME || m->actionArg == 1) {
         if (!(m->input & INPUT_Z_DOWN))
             return set_mario_action(m, ACT_WALKING, 0);
     }
@@ -1604,7 +1605,7 @@ s32 act_roll(struct MarioState *m) {
             play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
         }
 
-        return set_mario_action(m, ACT_ROLL_AIR, 0);
+        return set_mario_action(m, ACT_ROLL_AIR, m->actionArg);
     }
 
     set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
@@ -1677,7 +1678,7 @@ s32 act_dive_slide(struct MarioState *m) {
 
     if (!(m->input & INPUT_ABOVE_SLIDE)) {
         if (m->input & INPUT_Z_DOWN) {
-            return set_mario_action(m, ACT_ROLL, 0);
+            return set_mario_action(m, ACT_ROLL, 1);
         }
         else if (m->input & INPUT_B_PRESSED) {
             //dive hop
@@ -1977,7 +1978,7 @@ s32 act_long_jump_land(struct MarioState *m) {
         m->input &= ~INPUT_A_PRESSED;
     }
     else if (m->forwardVel > 15.0f) {
-        return set_mario_action(m, ACT_ROLL, 0);
+        return set_mario_action(m, ACT_ROLL, 1);
     }
 
     if (common_landing_cancels(m, &sLongJumpLandAction, set_jumping_action)) {

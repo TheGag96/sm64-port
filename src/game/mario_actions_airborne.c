@@ -2121,7 +2121,7 @@ s32 act_roll_air(struct MarioState *m) {
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
             if (!check_fall_damage_or_get_stuck(m, ACT_HARD_BACKWARD_GROUND_KB)) {
-                return set_mario_action(m, ACT_ROLL, 0);
+                return set_mario_action(m, ACT_ROLL, m->actionArg);
             }
             break;
 
