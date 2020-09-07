@@ -346,6 +346,11 @@ struct MarioState
     /*0xC4*/ f32 unkC4;
     /*0xC8*/ f32 spareFloat;
     /*0xCC*/ s32 spareInt;
+    /*0xD0*/ s16 stickLastAngle;
+    /*0xD2*/ s16 spinState;
+    /*0xD4*/ u16 spinIndex;
+    /*0xD6*/ u16 spinTimer;
+    /*0xD8*/ u16 spinBufferTimer;
 };
 
 #endif // TYPES_H

@@ -451,6 +451,10 @@ s32 act_jump(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+    if (m->input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
+    }
+
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
     common_air_action_step(m, ACT_JUMP_LAND, MARIO_ANIM_SINGLE_JUMP,
                            AIR_STEP_CHECK_LEDGE_GRAB | AIR_STEP_CHECK_HANG);
@@ -468,6 +472,10 @@ s32 act_double_jump(struct MarioState *m) {
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m->input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_HOOHOO);
@@ -508,6 +516,10 @@ s32 act_triple_jump(struct MarioState *m) {
 s32 act_backflip(struct MarioState *m) {
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m->input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAH_WAH_HOO);
@@ -601,6 +613,10 @@ s32 act_side_flip(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+    if (m->input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
+    }
+
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
 
     if (common_air_action_step(m, ACT_SIDE_FLIP_LAND, MARIO_ANIM_SLIDEFLIP, AIR_STEP_CHECK_LEDGE_GRAB)
@@ -622,6 +638,10 @@ s32 act_wall_kick_air(struct MarioState *m) {
 
     if (m->input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m->input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_jump_sound(m);
@@ -2081,6 +2101,10 @@ s32 act_ground_pound_jump(struct MarioState *m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+    if (m->input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
+    }
+
     if (m->actionTimer == 0) {
         m->spareFloat = 0;
     }
@@ -2151,6 +2175,46 @@ s32 act_roll_air(struct MarioState *m) {
     return FALSE;
 }
 
+s32 act_spin_jump(struct MarioState *m) {
+    if (m->actionTimer == 0) {
+        // determine clockwise/counter-clockwise spin
+        if (m->spinState < 0) {
+            m->actionState = 1;
+        }
+
+        if (m->actionArg == 0) {
+            m->faceAngle[1] = m->intendedYaw;
+        }
+    }
+    else if (m->actionTimer == 1 || m->actionTimer == 4) {
+        play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
+    }
+
+    f32 spinDirFactor = (m->actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
+
+    if (m->input & INPUT_B_PRESSED) {
+        return set_mario_action(m, ACT_DIVE, 0);
+    }
+
+    if (m->input & INPUT_Z_PRESSED) {
+        m->marioObj->header.gfx.angle[1] -= (s16) m->spareFloat * spinDirFactor;
+        return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAHOO);
+
+    common_air_action_step(m, ACT_DOUBLE_JUMP_LAND, MARIO_ANIM_TWIRL,
+                           AIR_STEP_CHECK_LEDGE_GRAB | AIR_STEP_CHECK_HANG);
+
+    m->spareFloat += 0x2800;
+    if (m->spareFloat > 0x10000) m->spareFloat -= 0x10000;
+    m->marioObj->header.gfx.angle[1] += (s16) (m->spareFloat * spinDirFactor);
+
+    m->actionTimer++;
+
+    return FALSE;
+}
+
 s32 check_common_airborne_cancels(struct MarioState *m) {
     if (m->pos[1] < m->waterLevel - 100) {
         return set_water_plunge_action(m);
@@ -2198,6 +2262,7 @@ s32 mario_execute_airborne_action(struct MarioState *m) {
         case ACT_RIDING_SHELL_JUMP:
         case ACT_RIDING_SHELL_FALL:    cancel = act_riding_shell_air(m);     break;
         case ACT_DIVE:                 cancel = act_dive(m);                 break;
+        case ACT_SPIN_JUMP:            cancel = act_spin_jump(m);            break;
         case ACT_AIR_THROW:            cancel = act_air_throw(m);            break;
         case ACT_BACKWARD_AIR_KB:      cancel = act_backward_air_kb(m);      break;
         case ACT_FORWARD_AIR_KB:       cancel = act_forward_air_kb(m);       break;
