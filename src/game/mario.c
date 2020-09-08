@@ -831,7 +831,10 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
             break;
 
         case ACT_SPIN_JUMP:
-            if (actionArg == 0) m->vel[1] = 65.0f;
+            if (actionArg == 0) {
+                m->vel[1] = 65.0f;
+                m->faceAngle[1] = m->intendedYaw;
+            }
             break;
 
         case ACT_GROUND_POUND_JUMP:

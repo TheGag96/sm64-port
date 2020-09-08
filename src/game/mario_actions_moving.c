@@ -1539,7 +1539,7 @@ s32 act_crouch_slide(struct MarioState *m) {
     }
 
     if (m->controller->buttonPressed & R_TRIG) {
-        m->vel[1] = 20.0f;
+        m->vel[1] = 19.0f;
         mario_set_forward_vel(m, max(32, m->forwardVel));
         play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
         play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
@@ -1610,7 +1610,7 @@ s32 act_roll(struct MarioState *m) {
         return set_jumping_action(m, ACT_LONG_JUMP, 0);
 
     if (m->controller->buttonPressed & R_TRIG && m->actionTimer > 0) {
-        m->vel[1] = 20.0f;
+        m->vel[1] = 19.0f;
         play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
 
         if (m->spareInt >= BOOST_LOCKOUT_TIME) {
@@ -1703,7 +1703,7 @@ s32 act_dive_slide(struct MarioState *m) {
         }
         else if (m->input & INPUT_B_PRESSED) {
             //dive hop
-            m->vel[1] = 25.0f;
+            m->vel[1] = 21.0f;
             return set_mario_action(m, ACT_DIVE, 1);
         }
     }
