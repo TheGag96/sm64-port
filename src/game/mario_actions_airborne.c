@@ -707,6 +707,10 @@ s32 act_twirling(struct MarioState *m) {
         yawVelTarget = 0x1800;
     }
 
+    if (m->vel[1] < 0.0f && m->input & INPUT_Z_PRESSED) {
+        return set_mario_action(m, ACT_SPIN_POUND, 0);
+    }
+
     m->angleVel[1] = approach_s32(m->angleVel[1], yawVelTarget, 0x200, 0x200);
     m->twirlYaw += m->angleVel[1];
 
@@ -867,6 +871,12 @@ s32 act_water_jump(struct MarioState *m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+    }
+
+    if (m->prevAction == ACT_WATER_GROUND_POUND_JUMP) {
+        // maintain spinning from water ground pound jump anim
+        m->spareFloat += (0x10000*1.0f - m->spareFloat) / 5.0f;
+        m->marioObj->header.gfx.angle[1] -= (s16) m->spareFloat;
     }
 
     return FALSE;
@@ -1378,7 +1388,9 @@ s32 act_wall_slide(struct MarioState *m) {
         return set_mario_action(m, ACT_WALL_KICK_AIR, 0);
     }
 
-    mario_set_forward_vel(m, 0.0f);
+    // attempt to stick to the wall a bit. if it's 0, sometimes you'll get kicked off of slightly sloped walls
+    mario_set_forward_vel(m, -1.0f);
+
     m->particleFlags |= PARTICLE_DUST;
 
     play_sound(SOUND_MOVING_TERRAIN_SLIDE + m->terrainSoundAddend, m->marioObj->header.gfx.cameraToObject);
@@ -1386,10 +1398,16 @@ s32 act_wall_slide(struct MarioState *m) {
 
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
+            mario_set_forward_vel(m, 0.0f);
             if (!check_fall_damage_or_get_stuck(m, ACT_HARD_BACKWARD_GROUND_KB)) {
                 return set_mario_action(m, ACT_FREEFALL_LAND, 0);
             }
             break;
+    }
+
+    if (m->wall == NULL) {
+        mario_set_forward_vel(m, 0.0f);
+        return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
     return FALSE;
@@ -2089,8 +2107,6 @@ s32 act_special_triple_jump(struct MarioState *m) {
 }
 
 s32 act_ground_pound_jump(struct MarioState *m) {
-    #define TWIRL_RATE 0x1800
-
     if (check_kick_or_dive_in_air(m)) {
         m->marioObj->header.gfx.angle[1] += (s16) m->spareFloat;
         return TRUE;
@@ -2145,6 +2161,7 @@ s32 act_roll_air(struct MarioState *m) {
     switch (perform_air_step(m, 0)) {
         case AIR_STEP_LANDED:
             if (!check_fall_damage_or_get_stuck(m, ACT_HARD_BACKWARD_GROUND_KB)) {
+                play_sound_and_spawn_particles(m, SOUND_ACTION_TERRAIN_STEP, 0);
                 return set_mario_action(m, ACT_ROLL, m->actionArg);
             }
             break;
@@ -2178,7 +2195,7 @@ s32 act_roll_air(struct MarioState *m) {
 s32 act_spin_jump(struct MarioState *m) {
     if (m->actionTimer == 0) {
         // determine clockwise/counter-clockwise spin
-        if (m->spinState < 0) {
+        if (m->spinDirection < 0) {
             m->actionState = 1;
         }
     }
@@ -2235,6 +2252,12 @@ s32 act_spin_pound(struct MarioState *m) {
 
     set_mario_animation(m, MARIO_ANIM_TWIRL);
 
+    if (m->input & INPUT_B_PRESSED) {
+        mario_set_forward_vel(m, 10.0f);
+        m->vel[1] = 35;
+        set_mario_action(m, ACT_DIVE, 0);
+    }
+
     stepResult = perform_air_step(m, 0);
     if (stepResult == AIR_STEP_LANDED) {
         if (should_get_stuck_in_ground(m)) {
@@ -2264,12 +2287,6 @@ s32 act_spin_pound(struct MarioState *m) {
 
         m->particleFlags |= PARTICLE_VERTICAL_STAR;
         set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
-    } else {
-        if (m->input & INPUT_B_PRESSED) {
-            mario_set_forward_vel(m, 10.0f);
-            m->vel[1] = 35;
-            set_mario_action(m, ACT_DIVE, 0);
-        }
     }
 
     m->spareFloat += 0x3053;

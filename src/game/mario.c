@@ -1327,15 +1327,6 @@ void update_mario_button_inputs(struct MarioState *m) {
  */
 void update_mario_joystick_inputs(struct MarioState *m) {
     #define SPIN_TIMER_SUCCESSFUL_INPUT 4
-    #define SPIN_TIMER_DURING_INPUT     4
-
-    // you must hit all these angle checkpoints on the analog stick for the spin input to activate
-    // (notice that they form a diagonal cross so none sit on the signed overflow boundary)
-    static const s16 SPIN_POINTS[] = {
-        0x2000, 0x6000, 0xA000, 0xE000
-    };
-    static const size_t SPIN_POINTS_LENGTH = sizeof(SPIN_POINTS) / sizeof(s16);
-    static const int REQUIRED_SPIN_CHECKPOINTS = SPIN_POINTS_LENGTH / 2;
 
     struct Controller *controller = m->controller;
     f32 mag = ((controller->stickMag / 64.0f) * (controller->stickMag / 64.0f)) * 64.0f;
@@ -1356,74 +1347,60 @@ void update_mario_joystick_inputs(struct MarioState *m) {
         m->intendedYaw = m->faceAngle[1];
     }
 
+    ////
+    // Update spin input
+    ////
+
     // prevent issues due to the frame going out of the dead zone registering the last angle as 0
     if (lastIntendedMag > 0.5f && m->intendedMag > 0.5f) {
-        if (m->spinState == 0) {
-            // determine the direction spinning has begun by detecting an angle checkpoint being passed
-            for (size_t i = 0; i < SPIN_POINTS_LENGTH; i++) {
-                if (m->stickLastAngle <  SPIN_POINTS[i] &&
-                    rawAngle          >= SPIN_POINTS[i]) {
-                    m->spinState = 1;
-                    m->spinIndex = i;
-                    m->spinTimer = SPIN_TIMER_DURING_INPUT;
-                    break;
-                }
-                else if (m->stickLastAngle >= SPIN_POINTS[i] + 1 &&
-                         rawAngle          <= SPIN_POINTS[i] - 1) {
-                    m->spinState = -1;
-                    m->spinIndex = i;
-                    m->spinTimer = SPIN_TIMER_DURING_INPUT;
-                    break;
-                }
-            }
+        s32 angleOverFrames = 0, thisFrameDelta = 0;
+
+        char newDirection   = m->spinDirection,
+             signedOverflow = FALSE;
+
+        if (rawAngle < m->controller->stickLastAngle) {
+            signedOverflow = m->controller->stickLastAngle - rawAngle > 0x8000;
+            newDirection = signedOverflow ? 1 : -1;
+        }
+        else if (rawAngle > m->controller->stickLastAngle) {
+            signedOverflow = rawAngle - m->controller->stickLastAngle > 0x8000;
+            newDirection = signedOverflow ? -1 : 1;
+        }
+
+        if (m->spinDirection != newDirection) {
+            for (int i = 0; i < ANGLE_QUEUE_SIZE; i++) m->controller->angleDeltaQueue[i] = 0;
+            m->spinDirection = newDirection;
         }
         else {
-            size_t nextIndex;
-            char spinStateAdvanced = FALSE;
-
-            if (m->spinState > 0) { // counter-clockwise
-                nextIndex = m->spinIndex == SPIN_POINTS_LENGTH - 1 ? 0 : (m->spinIndex + 1);
-
-                // don't allow them to go backwards, but make sure not to treat a sign change as backwards
-                if (rawAngle < m->stickLastAngle && !(rawAngle <= 0 && m->stickLastAngle > 0)) {
-                    m->spinState = 0;
-                    m->spinTimer = 0;
-                }
-                else if (m->stickLastAngle <  SPIN_POINTS[nextIndex] &&
-                         rawAngle          >= SPIN_POINTS[nextIndex]) {
-                    m->spinState++;
-                    m->spinIndex = nextIndex;
-                    m->spinTimer = SPIN_TIMER_DURING_INPUT;
-                    spinStateAdvanced = TRUE;
-                }
-                else m->spinTimer--;
+            for (int i = ANGLE_QUEUE_SIZE-1; i > 0; i--) {
+                m->controller->angleDeltaQueue[i] = m->controller->angleDeltaQueue[i-1];
+                angleOverFrames += m->controller->angleDeltaQueue[i];
             }
-            else { // clockwise
-                nextIndex = m->spinIndex == 0 ? SPIN_POINTS_LENGTH - 1 : (m->spinIndex - 1);
+        }
 
-                if (rawAngle > m->stickLastAngle && !(rawAngle >= 0 && m->stickLastAngle < 0)) {
-                    m->spinState = 0;
-                    m->spinTimer = 0;
-                }
-                else if (m->stickLastAngle >  SPIN_POINTS[nextIndex] &&
-                         rawAngle          <= SPIN_POINTS[nextIndex]) {
-                    m->spinState--;
-                    m->spinIndex = nextIndex;
-                    m->spinTimer = SPIN_TIMER_DURING_INPUT;
-                    spinStateAdvanced = TRUE;
-                }
-                else m->spinTimer--;
+        if (m->spinDirection < 0) {
+            if (signedOverflow) {
+                thisFrameDelta = (s32) ((1.0f*m->controller->stickLastAngle + 0x10000) - rawAngle);
             }
+            else {
+                thisFrameDelta = m->controller->stickLastAngle - rawAngle;
+            }
+        }
+        else if (m->spinDirection > 0) {
+            if (signedOverflow) {
+                thisFrameDelta = (s32) (1.0f*rawAngle + 0x10000 - m->controller->stickLastAngle);
+            }
+            else {
+                thisFrameDelta = rawAngle - m->controller->stickLastAngle;
+            }
+        }
 
-            if (m->spinTimer == 0) {
-                m->spinState = 0;
-            }
+        m->controller->angleDeltaQueue[0] = thisFrameDelta;
 
-            // allow the player to continue spining the control stick to refresh the input buffer
-            if (spinStateAdvanced &&
-                (m->spinState >= REQUIRED_SPIN_CHECKPOINTS || m->spinState <= -REQUIRED_SPIN_CHECKPOINTS)) {
-                m->spinBufferTimer = SPIN_TIMER_SUCCESSFUL_INPUT;
-            }
+        angleOverFrames += thisFrameDelta;
+
+        if (angleOverFrames >= 0x9000) {
+            m->spinBufferTimer = SPIN_TIMER_SUCCESSFUL_INPUT;
         }
 
         // allow a buffer after a successful input so that you can switch directions
@@ -1433,12 +1410,11 @@ void update_mario_joystick_inputs(struct MarioState *m) {
         }
     }
     else {
-        m->spinState = 0;
-        m->spinTimer = 0;
+        m->spinDirection = 0;
         m->spinBufferTimer = 0;
     }
 
-    m->stickLastAngle = rawAngle;
+    m->controller->stickLastAngle = rawAngle;
 }
 
 /**
@@ -2012,6 +1988,9 @@ void init_mario_from_save_file(void) {
     gMarioState->statusForCamera = &gPlayerCameraState[0];
     gMarioState->marioBodyState = &gBodyStates[0];
     gMarioState->controller = &gControllers[0];
+
+    for (int i = 0; i < ANGLE_QUEUE_SIZE; i++) gMarioState->controller->angleDeltaQueue[i] = 0;
+
     gMarioState->animation = &D_80339D10;
 
     gMarioState->numCoins = 0;

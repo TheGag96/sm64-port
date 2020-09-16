@@ -1697,8 +1697,10 @@ s32 act_dive_slide(struct MarioState *m) {
                                 0);
     }
 
+    play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_BODY_HIT_GROUND);
+
     if (!(m->input & INPUT_ABOVE_SLIDE)) {
-        if (m->input & INPUT_Z_DOWN) {
+        if (m->input & INPUT_Z_DOWN && m->actionTimer == 0) {
             return set_mario_action(m, ACT_ROLL, 1);
         }
         else if (m->input & INPUT_B_PRESSED) {
@@ -1707,8 +1709,6 @@ s32 act_dive_slide(struct MarioState *m) {
             return set_mario_action(m, ACT_DIVE, 1);
         }
     }
-
-    play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_BODY_HIT_GROUND);
 
     //! If the dive slide ends on the same frame that we pick up on object,
     // Mario will not be in the dive slide action for the call to
@@ -1727,6 +1727,9 @@ s32 act_dive_slide(struct MarioState *m) {
     }
 
     common_slide_action(m, ACT_STOMACH_SLIDE_STOP, ACT_FREEFALL, MARIO_ANIM_DIVE);
+
+    m->actionTimer++;
+
     return FALSE;
 }
 
@@ -1998,7 +2001,8 @@ s32 act_long_jump_land(struct MarioState *m) {
     if (!(m->input & INPUT_Z_DOWN)) {
         m->input &= ~INPUT_A_PRESSED;
     }
-    else if (m->forwardVel > 15.0f) {
+    else if (m->forwardVel > 15.0f && m->actionTimer == 0) {
+        play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_LANDING);
         return set_mario_action(m, ACT_ROLL, 1);
     }
 
@@ -2014,6 +2018,9 @@ s32 act_long_jump_land(struct MarioState *m) {
                           !m->marioObj->oMarioLongJumpIsSlow ? MARIO_ANIM_CROUCH_FROM_FAST_LONGJUMP
                                                              : MARIO_ANIM_CROUCH_FROM_SLOW_LONGJUMP,
                           ACT_FREEFALL);
+
+    m->actionTimer++;
+
     return FALSE;
 }
 

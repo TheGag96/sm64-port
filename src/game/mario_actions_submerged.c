@@ -1618,15 +1618,19 @@ s32 act_water_ground_pound(struct MarioState *m) {
 }
 
 s32 act_water_ground_pound_land(struct MarioState *m) {
+    #define GROUND_POUND_JUMP_VEL 40.0f
+
     m->actionState = 1;
 
     if (m->input & INPUT_OFF_FLOOR) {
         return set_mario_action(m, ACT_WATER_IDLE, 0);
     }
 
-    // if (m->input & INPUT_A_PRESSED) {
-    //     return set_jumping_action(m, ACT_GROUND_POUND_JUMP, 0);
-    // }
+    if (m->input & INPUT_A_PRESSED) {
+        m->vel[1] = GROUND_POUND_JUMP_VEL;
+        play_sound(SOUND_ACTION_SWIM_FAST, m->marioObj->header.gfx.cameraToObject);
+        return set_mario_action(m, ACT_WATER_GROUND_POUND_JUMP, 0);
+    }
 
     m->vel[1] = 0.0f;
     m->pos[1] = m->floorHeight;
@@ -1669,6 +1673,58 @@ s32 act_water_ground_pound_stroke(struct MarioState *m) {
 
     float_surface_gfx(m);
     set_swimming_at_surface_particles(m, PARTICLE_WAVE_TRAIL);
+
+    return 0;
+}
+
+s32 act_water_ground_pound_jump(struct MarioState *m) {
+    #define GROUND_POUND_JUMP_TIMER 20
+    #define GROUND_POUND_JUMP_DECAY 1.4f
+
+    // set_mario_animation(m, MARIO_ANIM_SWIM_PART1);
+    set_mario_animation(m, MARIO_ANIM_SINGLE_JUMP);
+    m->particleFlags |= PARTICLE_PLUNGE_BUBBLE;
+
+    if (m->actionTimer == 0) {
+        m->spareFloat = 0;
+    }
+
+    Vec3f nextPos;
+    Vec3f step;
+
+    vec3f_copy(step, m->vel);
+    apply_water_current(m, step);
+
+    nextPos[0] = m->pos[0] + step[0];
+    nextPos[1] = m->pos[1] + step[1];
+    nextPos[2] = m->pos[2] + step[2];
+
+    u32 stepResult = perform_water_full_step(m, nextPos);
+
+    vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
+    vec3s_set(m->marioObj->header.gfx.angle, -m->faceAngle[0], m->faceAngle[1], m->faceAngle[2]);
+
+    if (m->pos[1] > m->waterLevel - 80) {
+        return set_mario_action(m, ACT_WATER_JUMP, 0);
+    }
+
+    if (m->actionTimer >= GROUND_POUND_JUMP_TIMER) {
+        mario_set_forward_vel(m, m->vel[1]); // normal swim routines will use forwardVel to calculate y speed
+        m->faceAngle[0] = 0x3EFF;
+        return set_mario_action(m, (m->input & INPUT_A_DOWN) ? ACT_FLUTTER_KICK : ACT_SWIMMING_END, 0);
+    }
+    m->actionTimer++;
+
+    mario_set_forward_vel(m, 0.0f);
+
+    m->vel[1] = approach_f32(m->vel[1], 0.0f, GROUND_POUND_JUMP_DECAY, GROUND_POUND_JUMP_DECAY);
+    // m->faceAngle[0] = 0x3EFF;
+
+    float_surface_gfx(m);
+    set_swimming_at_surface_particles(m, PARTICLE_WAVE_TRAIL);
+
+    m->spareFloat += (0x10000*1.0f - m->spareFloat) / 5.0f;
+    m->marioObj->header.gfx.angle[1] -= (s16) m->spareFloat;
 
     return 0;
 }
@@ -1725,6 +1781,7 @@ s32 mario_execute_submerged_action(struct MarioState *m) {
         case ACT_WATER_GROUND_POUND:         cancel = act_water_ground_pound(m);         break;
         case ACT_WATER_GROUND_POUND_LAND:    cancel = act_water_ground_pound_land(m);    break;
         case ACT_WATER_GROUND_POUND_STROKE:  cancel = act_water_ground_pound_stroke(m);  break;
+        case ACT_WATER_GROUND_POUND_JUMP:    cancel = act_water_ground_pound_jump(m);    break;
         case ACT_BREASTSTROKE:               cancel = act_breaststroke(m);               break;
         case ACT_SWIMMING_END:               cancel = act_swimming_end(m);               break;
         case ACT_FLUTTER_KICK:               cancel = act_flutter_kick(m);               break;
