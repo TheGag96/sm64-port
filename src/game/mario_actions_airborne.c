@@ -2299,6 +2299,51 @@ s32 act_spin_pound(struct MarioState *m) {
     return FALSE;
 }
 
+
+s32 act_ledge_parkour(struct MarioState *m) {
+    set_mario_animation(m, MARIO_ANIM_SLIDEFLIP);
+
+    s16 animFrame = m->marioObj->header.gfx.unk38.animFrame;
+
+    if (m->actionTimer == 0)      play_sound(SOUND_MARIO_HAHA_2, m->marioObj->header.gfx.cameraToObject);
+    else if (m->actionTimer == 1) play_sound(SOUND_ACTION_SIDE_FLIP_UNK, m->marioObj->header.gfx.cameraToObject);
+
+    update_air_without_turn(m);
+
+    switch (perform_air_step(m, AIR_STEP_CHECK_LEDGE_GRAB)) {
+        case AIR_STEP_NONE:
+            // play the side flip animation at double speed for a portion of it
+            if      (animFrame < 15) animFrame += 2;
+            else if (animFrame > 23) animFrame = 23;
+            else                     animFrame++;
+
+            set_anim_to_frame(m, animFrame);
+            m->marioObj->header.gfx.angle[1] += 0x8000;
+            break;
+
+        case AIR_STEP_LANDED:
+            m->marioObj->header.gfx.angle[1] += 0x8000;
+            set_mario_action(m, ACT_FREEFALL_LAND_STOP, 0);
+            play_mario_landing_sound(m, SOUND_ACTION_TERRAIN_LANDING);
+            break;
+
+        case AIR_STEP_HIT_WALL:
+            m->marioObj->header.gfx.angle[1] += 0x8000;
+            mario_set_forward_vel(m, 0.0f);
+            break;
+
+        case AIR_STEP_HIT_LAVA_WALL:
+            m->marioObj->header.gfx.angle[1] += 0x8000;
+            lava_boost_on_wall(m);
+            break;
+    }
+
+    m->actionTimer++;
+
+    return FALSE;
+}
+
+
 s32 check_common_airborne_cancels(struct MarioState *m) {
     if (m->pos[1] < m->waterLevel - 100) {
         return set_water_plunge_action(m);
@@ -2377,6 +2422,7 @@ s32 mario_execute_airborne_action(struct MarioState *m) {
         case ACT_WALL_SLIDE:           cancel = act_wall_slide(m);           break;
         case ACT_GROUND_POUND_JUMP:    cancel = act_ground_pound_jump(m);    break;
         case ACT_ROLL_AIR:             cancel = act_roll_air(m);             break;
+        case ACT_LEDGE_PARKOUR:        cancel = act_ledge_parkour(m);        break;
     }
     /* clang-format on */
 

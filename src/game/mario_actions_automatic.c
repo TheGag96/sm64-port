@@ -547,6 +547,10 @@ s32 act_ledge_grab(struct MarioState *m) {
     s16 intendedDYaw = m->intendedYaw - m->faceAngle[1];
     s32 hasSpaceForMario = (m->ceilHeight - m->floorHeight >= 160.0f);
 
+    if (m->actionTimer == 0) {
+        m->spareFloat = m->forwardVel;
+    }
+
     if (m->actionTimer < 10) {
         m->actionTimer++;
     }
@@ -561,6 +565,12 @@ s32 act_ledge_grab(struct MarioState *m) {
 
     if ((m->input & INPUT_A_PRESSED) && hasSpaceForMario) {
         return set_mario_action(m, ACT_LEDGE_CLIMB_FAST, 0);
+    }
+
+    if (m->actionTimer < 4 && (m->input & INPUT_B_PRESSED) && hasSpaceForMario && m->spareFloat >= 31.0f) {
+        mario_set_forward_vel(m, m->spareFloat + 5.0f);
+        m->vel[1] = 25.0f;
+        return set_mario_action(m, ACT_LEDGE_PARKOUR, 0);
     }
 
     if (m->input & INPUT_UNKNOWN_10) {
