@@ -1516,7 +1516,7 @@ static s32 act_hold_metal_water_fall_land(struct MarioState *m) {
 
 s32 act_water_ground_pound(struct MarioState *m) {
     #define GROUND_POUND_STROKE_SPEED 27
-    #define GROUND_POUND_TIMER        50
+    #define GROUND_POUND_TIMER        30
 
     u32 stepResult;
 
@@ -1561,7 +1561,7 @@ s32 act_water_ground_pound(struct MarioState *m) {
         if (m->actionTimer >= m->marioObj->header.gfx.unk38.curAnim->unk08 + 4) {
             // play_sound(SOUND_MARIO_GROUND_POUND_WAH, m->marioObj->header.gfx.cameraToObject);
             play_sound(SOUND_ACTION_SWIM_FAST, m->marioObj->header.gfx.cameraToObject);
-            m->vel[1] = -40.0f;
+            m->vel[1] = -45.0f;
             m->actionState = 1;
         }
 
