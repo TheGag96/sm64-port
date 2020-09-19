@@ -501,8 +501,7 @@ void update_walking_speed(struct MarioState *m) {
         if (m->forwardVel < 0) {
             mario_set_forward_vel(m, -m->forwardVel);
         }
-    }\
-	else {
+    } else {
         m->faceAngle[1] =
             m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0xC00, 0xC00);
 	}
@@ -2020,8 +2019,6 @@ s32 act_long_jump_land(struct MarioState *m) {
                           !m->marioObj->oMarioLongJumpIsSlow ? MARIO_ANIM_CROUCH_FROM_FAST_LONGJUMP
                                                              : MARIO_ANIM_CROUCH_FROM_SLOW_LONGJUMP,
                           ACT_FREEFALL);
-
-    m->actionTimer++;
 
     return FALSE;
 }
