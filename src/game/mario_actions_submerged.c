@@ -1653,13 +1653,15 @@ s32 act_water_ground_pound_stroke(struct MarioState *m) {
     #define GROUND_POUND_STROKE_TIMER 20
     #define GROUND_POUND_STROKE_DECAY 0.3f
 
+    u32 stepResult;
+
     set_mario_animation(m, MARIO_ANIM_SWIM_PART1);
 
     if (m->actionTimer == 0) {
         play_sound(SOUND_ACTION_SWIM_FAST, m->marioObj->header.gfx.cameraToObject);
     }
 
-    u32 stepResult = perform_water_step(m);
+    stepResult = perform_water_step(m);
     if (stepResult == WATER_STEP_HIT_WALL) {
         return set_mario_action(m, ACT_BACKWARD_WATER_KB, 0);
     }
@@ -1681,6 +1683,10 @@ s32 act_water_ground_pound_jump(struct MarioState *m) {
     #define GROUND_POUND_JUMP_TIMER 20
     #define GROUND_POUND_JUMP_DECAY 1.4f
 
+    Vec3f nextPos;
+    Vec3f step;
+    u32 stepResult;
+
     // set_mario_animation(m, MARIO_ANIM_SWIM_PART1);
     set_mario_animation(m, MARIO_ANIM_SINGLE_JUMP);
     m->particleFlags |= PARTICLE_PLUNGE_BUBBLE;
@@ -1689,9 +1695,6 @@ s32 act_water_ground_pound_jump(struct MarioState *m) {
         m->spareFloat = 0;
     }
 
-    Vec3f nextPos;
-    Vec3f step;
-
     vec3f_copy(step, m->vel);
     apply_water_current(m, step);
 
@@ -1699,7 +1702,7 @@ s32 act_water_ground_pound_jump(struct MarioState *m) {
     nextPos[1] = m->pos[1] + step[1];
     nextPos[2] = m->pos[2] + step[2];
 
-    u32 stepResult = perform_water_full_step(m, nextPos);
+    stepResult = perform_water_full_step(m, nextPos);
 
     vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
     vec3s_set(m->marioObj->header.gfx.angle, -m->faceAngle[0], m->faceAngle[1], m->faceAngle[2]);

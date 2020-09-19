@@ -1330,14 +1330,13 @@ void update_mario_joystick_inputs(struct MarioState *m) {
     struct Controller *controller = m->controller;
     f32 mag = ((controller->stickMag / 64.0f) * (controller->stickMag / 64.0f)) * 64.0f;
     f32 lastIntendedMag = m->intendedMag;
+    s16 rawAngle = atan2s(-controller->stickY, controller->stickX);
 
     if (m->squishTimer == 0) {
         m->intendedMag = mag / 2.0f;
     } else {
         m->intendedMag = mag / 8.0f;
     }
-
-    s16 rawAngle = atan2s(-controller->stickY, controller->stickX);
 
     if (m->intendedMag > 0.0f) {
         m->intendedYaw = rawAngle + m->area->camera->yaw;
@@ -1353,6 +1352,7 @@ void update_mario_joystick_inputs(struct MarioState *m) {
     // prevent issues due to the frame going out of the dead zone registering the last angle as 0
     if (lastIntendedMag > 0.5f && m->intendedMag > 0.5f) {
         s32 angleOverFrames = 0, thisFrameDelta = 0;
+        size_t i;
 
         char newDirection   = m->spinDirection,
              signedOverflow = FALSE;
@@ -1367,11 +1367,11 @@ void update_mario_joystick_inputs(struct MarioState *m) {
         }
 
         if (m->spinDirection != newDirection) {
-            for (int i = 0; i < ANGLE_QUEUE_SIZE; i++) m->controller->angleDeltaQueue[i] = 0;
+            for (i = 0; i < ANGLE_QUEUE_SIZE; i++) m->controller->angleDeltaQueue[i] = 0;
             m->spinDirection = newDirection;
         }
         else {
-            for (int i = ANGLE_QUEUE_SIZE-1; i > 0; i--) {
+            for (i = ANGLE_QUEUE_SIZE-1; i > 0; i--) {
                 m->controller->angleDeltaQueue[i] = m->controller->angleDeltaQueue[i-1];
                 angleOverFrames += m->controller->angleDeltaQueue[i];
             }
@@ -1980,6 +1980,8 @@ void init_mario(void) {
 }
 
 void init_mario_from_save_file(void) {
+    size_t i;
+
     gMarioState->unk00 = 0;
     gMarioState->flags = 0;
     gMarioState->action = 0;
@@ -1988,7 +1990,7 @@ void init_mario_from_save_file(void) {
     gMarioState->marioBodyState = &gBodyStates[0];
     gMarioState->controller = &gControllers[0];
 
-    for (int i = 0; i < ANGLE_QUEUE_SIZE; i++) gMarioState->controller->angleDeltaQueue[i] = 0;
+    for (i = 0; i < ANGLE_QUEUE_SIZE; i++) gMarioState->controller->angleDeltaQueue[i] = 0;
 
     gMarioState->animation = &D_80339D10;
 

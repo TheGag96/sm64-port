@@ -232,6 +232,9 @@ s32 update_sliding(struct MarioState *m, f32 stopSpeed) {
     f32 accel;
     f32 oldSpeed;
     f32 newSpeed;
+    f32 angleChange;
+    f32 modSlideVelX;
+    f32 modSlideVelZ;
 
     s32 stopped = FALSE;
 
@@ -272,16 +275,14 @@ s32 update_sliding(struct MarioState *m, f32 stopSpeed) {
         }
     }
 
-    // if (m->action == ACT_ROLL) lossFactor *= 1.048;
-
     oldSpeed = sqrtf(m->slideVelX * m->slideVelX + m->slideVelZ * m->slideVelZ);
 
     //! This is uses trig derivatives to rotate Mario's speed.
     // In vanilla, it was slightly off/asymmetric since it uses the new X speed, but the old
     // Z speed. I've gone and fixed it here.
-    f32 angleChange  = (m->intendedMag / 32.0f) * (m->action == ACT_ROLL ? 0.6f : 1.0f),
-        modSlideVelX = m->slideVelZ * angleChange * sideward * 0.05f,
-        modSlideVelZ = m->slideVelX * angleChange * sideward * 0.05f;
+    angleChange  = (m->intendedMag / 32.0f) * (m->action == ACT_ROLL ? 0.6f : 1.0f),
+    modSlideVelX = m->slideVelZ * angleChange * sideward * 0.05f,
+    modSlideVelZ = m->slideVelX * angleChange * sideward * 0.05f;
 
     m->slideVelX += modSlideVelX;
     m->slideVelZ -= modSlideVelZ;
@@ -459,6 +460,7 @@ void update_walking_speed(struct MarioState *m) {
     f32 targetSpeed;
     f32 firmSpeedCap = m->prevAction == ACT_ROLL ? 60.0f : 48.0f;
     f32 hardSpeedCap = 105;
+    f32 decayFactor;
 
     if (m->floor != NULL && m->floor->type == SURFACE_SLOW) {
         maxTargetSpeed = 24.0f;
@@ -473,7 +475,7 @@ void update_walking_speed(struct MarioState *m) {
     }
 
     // instead of a hard walk speed cap, going over this new firm speed cap makes you slow down to it twice as fast
-    f32 decayFactor = m->forwardVel > firmSpeedCap ? 2.0f : 1.0f;
+    decayFactor = m->forwardVel > firmSpeedCap ? 2.0f : 1.0f;
 
     if (m->forwardVel <= 0.0f) {
         m->forwardVel += 1.1f;

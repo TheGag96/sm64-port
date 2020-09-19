@@ -2193,6 +2193,8 @@ s32 act_roll_air(struct MarioState *m) {
 }
 
 s32 act_spin_jump(struct MarioState *m) {
+    f32 spinDirFactor;
+
     if (m->actionTimer == 0) {
         // determine clockwise/counter-clockwise spin
         if (m->spinDirection < 0) {
@@ -2203,7 +2205,7 @@ s32 act_spin_jump(struct MarioState *m) {
         play_sound(SOUND_ACTION_TWIRL, m->marioObj->header.gfx.cameraToObject);
     }
 
-    f32 spinDirFactor = (m->actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
+    spinDirFactor = (m->actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
 
     if (m->input & INPUT_B_PRESSED) {
         return set_mario_action(m, ACT_DIVE, 0);
@@ -2243,12 +2245,13 @@ s32 act_spin_jump(struct MarioState *m) {
 
 s32 act_spin_pound(struct MarioState *m) {
     u32 stepResult;
+    f32 spinDirFactor;
 
     if (m->actionTimer == 0) {
         m->actionState = m->actionArg;
     }
 
-    f32 spinDirFactor = (m->actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
+    spinDirFactor = (m->actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
 
     set_mario_animation(m, MARIO_ANIM_TWIRL);
 
@@ -2301,9 +2304,11 @@ s32 act_spin_pound(struct MarioState *m) {
 
 
 s32 act_ledge_parkour(struct MarioState *m) {
+    s16 animFrame;
+
     set_mario_animation(m, MARIO_ANIM_SLIDEFLIP);
 
-    s16 animFrame = m->marioObj->header.gfx.unk38.animFrame;
+    animFrame = m->marioObj->header.gfx.unk38.animFrame;
 
     if (m->actionTimer == 0)      play_sound(SOUND_MARIO_HAHA_2, m->marioObj->header.gfx.cameraToObject);
     else if (m->actionTimer == 1) play_sound(SOUND_ACTION_SIDE_FLIP_UNK, m->marioObj->header.gfx.cameraToObject);
