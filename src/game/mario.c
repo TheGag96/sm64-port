@@ -1140,7 +1140,7 @@ s32 hurt_and_set_mario_action(struct MarioState *m, u32 action, u32 actionArg, s
  */
 s32 check_common_action_exits(struct MarioState *m) {
     if (m->input & INPUT_A_PRESSED) {
-        if (m->input & INPUT_ANALOG_SPIN) {
+        if ((m->input & INPUT_ANALOG_SPIN) && !(m->input & INPUT_ABOVE_SLIDE)) {
             return set_mario_action(m, ACT_SPIN_JUMP, 0);
         }
         else {
