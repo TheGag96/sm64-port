@@ -1606,7 +1606,9 @@ s32 act_roll(struct MarioState *m) {
     }
 
     if (m->input & INPUT_B_PRESSED){
+#ifdef VERSION_SH
         queue_rumble_data(5, 80);
+#endif
         return set_jumping_action(m, ACT_FORWARD_ROLLOUT, 0);
     }
 

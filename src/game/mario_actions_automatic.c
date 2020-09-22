@@ -570,7 +570,9 @@ s32 act_ledge_grab(struct MarioState *m) {
     if (m->actionTimer < 4 && (m->input & INPUT_B_PRESSED) && hasSpaceForMario && m->spareFloat >= 31.0f) {
         mario_set_forward_vel(m, m->spareFloat + 5.0f);
         m->vel[1] = 25.0f;
+#ifdef VERSION_SH
         queue_rumble_data(5, 80);
+#endif
         return set_mario_action(m, ACT_LEDGE_PARKOUR, 0);
     }
 
