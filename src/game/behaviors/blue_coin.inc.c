@@ -68,7 +68,9 @@ void bhv_blue_coin_switch_loop(void) {
             // If Mario is on the switch and has ground-pounded,
             // recede and get ready to start ticking.
             if (gMarioObject->platform == o) {
-                if (gMarioStates->action == ACT_GROUND_POUND_LAND) {
+                if (gMarioStates->action == ACT_GROUND_POUND_LAND ||
+                    gMarioStates->action == ACT_SPIN_POUND_LAND   ||
+                    gMarioStates->action == ACT_WATER_GROUND_POUND_LAND) {
                     // Set to BLUE_COIN_SWITCH_ACT_RECEDING
                     o->oAction++;
 
