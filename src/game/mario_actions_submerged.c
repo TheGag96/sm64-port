@@ -1558,7 +1558,7 @@ s32 act_water_ground_pound(struct MarioState *m) {
         }
 
         m->actionTimer++;
-        if (m->actionTimer >= m->marioObj->header.gfx.unk38.curAnim->unk08 + 4) {
+        if (m->actionTimer >= m->marioObj->header.gfx.animInfo.curAnim->loopEnd + 4) {
             // play_sound(SOUND_MARIO_GROUND_POUND_WAH, m->marioObj->header.gfx.cameraToObject);
             play_sound(SOUND_ACTION_SWIM_FAST, m->marioObj->header.gfx.cameraToObject);
             m->vel[1] = -45.0f;

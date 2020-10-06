@@ -2306,7 +2306,7 @@ s32 act_ledge_parkour(struct MarioState *m) {
 
     set_mario_animation(m, MARIO_ANIM_SLIDEFLIP);
 
-    animFrame = m->marioObj->header.gfx.unk38.animFrame;
+    animFrame = m->marioObj->header.gfx.animInfo.animFrame;
 
     if (m->actionTimer == 0)      play_sound(SOUND_MARIO_HAHA_2, m->marioObj->header.gfx.cameraToObject);
     else if (m->actionTimer == 1) play_sound(SOUND_ACTION_SIDE_FLIP_UNK, m->marioObj->header.gfx.cameraToObject);
