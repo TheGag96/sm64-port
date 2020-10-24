@@ -33,7 +33,7 @@ struct Controller
   /*0x38*/ OSContStatus* statusData;
   /*0x3C*/ OSContPad* controllerData;
   /*0x40*/ s16 stickLastAngle;
-  version (Shindou) {
+  version (SM64_SH) {
     /*0x42*/ int port;
   }
 }

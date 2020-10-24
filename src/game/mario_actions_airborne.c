@@ -14,23 +14,9 @@
 #include "save_file.h"
 #include "thread6.h"
 
-void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
-    s32 animFrame = m->marioObj->header.gfx.animInfo.animFrame;
-    if (animFrame == frame1 || animFrame == frame2 || animFrame == frame3) {
-        play_sound(SOUND_ACTION_SPIN, m->marioObj->header.gfx.cameraToObject);
-    }
-}
+void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3);
 
-void play_far_fall_sound(struct MarioState *m) {
-    u32 action = m->action;
-    if (!(action & ACT_FLAG_INVULNERABLE) && action != ACT_TWIRLING && action != ACT_FLYING
-        && !(m->flags & MARIO_UNKNOWN_18)) {
-        if (m->peakHeight - m->pos[1] > 1150.0f) {
-            play_sound(SOUND_MARIO_WAAAOOOW, m->marioObj->header.gfx.cameraToObject);
-            m->flags |= MARIO_UNKNOWN_18;
-        }
-    }
-}
+void play_far_fall_sound(struct MarioState *m);
 
 #ifndef VERSION_JP
 void play_knockback_sound(struct MarioState *m) {

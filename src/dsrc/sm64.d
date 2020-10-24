@@ -2,6 +2,7 @@ module sm64;
 
 public import ultra64;
 public import types;
+public import audio.defines;
 
 // Global header for Super Mario 64
 
