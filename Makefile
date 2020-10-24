@@ -218,7 +218,7 @@ ACTOR_DIR := actors
 LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
-SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin bin/$(VERSION) data assets
+SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/dsrc src/dsrc/engine src/dsrc/game src/dsrc/audio src/dsrc/menu src/dsrc/buffers actors levels bin bin/$(VERSION) data assets
 ASM_DIRS := lib
 ifeq ($(TARGET_N64),1)
   ASM_DIRS := asm $(ASM_DIRS)
@@ -273,6 +273,7 @@ include Makefile.split
 LEVEL_C_FILES := $(wildcard levels/*/leveldata.c) $(wildcard levels/*/script.c) $(wildcard levels/*/geo.c)
 C_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FILES)
 CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
+D_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.d))
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
 ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
 GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -326,6 +327,7 @@ SOUND_OBJ_FILES := $(SOUND_BIN_DIR)/sound_data.o
 # Object files
 O_FILES := $(foreach file,$(C_FILES),$(BUILD_DIR)/$(file:.c=.o)) \
            $(foreach file,$(CXX_FILES),$(BUILD_DIR)/$(file:.cpp=.o)) \
+           $(foreach file,$(D_FILES),$(BUILD_DIR)/$(file:.d=.o)) \
            $(foreach file,$(S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
            $(foreach file,$(GENERATED_C_FILES),$(file:.c=.o))
 
@@ -791,6 +793,8 @@ $(BUILD_DIR)/%.o: %.c
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
 	$(CC) -c $(CFLAGS) -o $@ $<
 
+$(BUILD_DIR)/%.o: %.d
+	ldc2 -betterC -c -I=src/dsrc -of$@ $<
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
