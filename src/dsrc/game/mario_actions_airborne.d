@@ -71,18 +71,18 @@ s32 check_fall_damage(MarioState* m, u32 hardFallAction) {
         if (m.vel[1] < -55.0f) {
             if (fallHeight > 3000.0f) {
                 m.hurtCounter += (m.flags & MARIO_CAP_ON_HEAD) ? 16 : 24;
-version (SM64_SH) {
-                queue_rumble_data(5, 80);
-}
+                version (SM64_SH) {
+                    queue_rumble_data(5, 80);
+                }
                 set_camera_shake_from_hit(SHAKE_FALL_DAMAGE);
                 play_sound(SOUND_MARIO_ATTACKED, m.marioObj.header.gfx.cameraToObject.ptr);
                 return drop_and_set_mario_action(m, hardFallAction, 4);
             } else if (fallHeight > damageHeight && !mario_floor_is_slippery(m)) {
                 m.hurtCounter += (m.flags & MARIO_CAP_ON_HEAD) ? 8 : 12;
                 m.squishTimer = 30;
-version (SM64_SH) {
-                queue_rumble_data(5, 80);
-}
+                version (SM64_SH) {
+                    queue_rumble_data(5, 80);
+                }
                 set_camera_shake_from_hit(SHAKE_FALL_DAMAGE);
                 play_sound(SOUND_MARIO_ATTACKED, m.marioObj.header.gfx.cameraToObject.ptr);
             }
@@ -117,17 +117,16 @@ s32 should_get_stuck_in_ground(MarioState* m) {
 
 s32 check_fall_damage_or_get_stuck(MarioState* m, u32 hardFallAction) {
     if (should_get_stuck_in_ground(m)) {
-version (SM64_JP) {
-        play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
-}
-else {
-        play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
-}
+        version (SM64_JP) {
+            play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
+        } else {
+            play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
+        }
         m.particleFlags |= PARTICLE_MIST_CIRCLE;
         drop_and_set_mario_action(m, ACT_FEET_STUCK_IN_GROUND, 0);
-version (SM64_SH) {
-        queue_rumble_data(5, 80);
-}
+        version (SM64_SH) {
+            queue_rumble_data(5, 80);
+        }
         return true;
     }
 
@@ -164,9 +163,9 @@ s32 check_horizontal_wind(MarioState* m) {
         m.slideYaw = atan2s(m.slideVelZ, m.slideVelX);
         m.forwardVel = speed * coss(m.faceAngle[1] - m.slideYaw);
 
-version (SM64_JP) {
-        play_sound(SOUND_ENV_WIND2, m.marioObj.header.gfx.cameraToObject.ptr);
-}
+        version (SM64_JP) {
+            play_sound(SOUND_ENV_WIND2, m.marioObj.header.gfx.cameraToObject.ptr);
+        }
         return true;
     }
 
@@ -381,9 +380,9 @@ u32 common_air_action_step(MarioState* m, u32 landAction, s32 animation, u32 ste
             set_mario_animation(m, animation);
 
             if (m.forwardVel > 16.0f) {
-version (SM64_SH) {
-                queue_rumble_data(5, 40);
-}
+                version (SM64_SH) {
+                    queue_rumble_data(5, 40);
+                }
                 mario_bonk_reflection(m, false);
                 m.faceAngle[1] += 0x8000;
 
@@ -500,11 +499,11 @@ else {
 }
 
     common_air_action_step(m, ACT_TRIPLE_JUMP_LAND, MARIO_ANIM_TRIPLE_JUMP, 0);
-version (SM64_SH) {
-    if (m.action == ACT_TRIPLE_JUMP_LAND) {
-        queue_rumble_data(5, 40);
+    version (SM64_SH) {
+        if (m.action == ACT_TRIPLE_JUMP_LAND) {
+            queue_rumble_data(5, 40);
+        }
     }
-}
     play_flip_sounds(m, 2, 8, 20);
     return false;
 }
@@ -520,11 +519,11 @@ s32 act_backflip(MarioState* m) {
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAH_WAH_HOO);
     common_air_action_step(m, ACT_BACKFLIP_LAND, MARIO_ANIM_BACKFLIP, 0);
-version (SM64_SH) {
-    if (m.action == ACT_BACKFLIP_LAND) {
-        queue_rumble_data(5, 40);
+    version (SM64_SH) {
+        if (m.action == ACT_BACKFLIP_LAND) {
+            queue_rumble_data(5, 40);
+        }
     }
-}
     play_flip_sounds(m, 2, 3, 17);
     return false;
 }
@@ -662,11 +661,11 @@ s32 act_long_jump(MarioState* m) {
     }
 
     common_air_action_step(m, ACT_LONG_JUMP_LAND, animation, AIR_STEP_CHECK_LEDGE_GRAB);
-version (SM64_SH) {
-    if (m.action == ACT_LONG_JUMP_LAND) {
-        queue_rumble_data(5, 40);
+    version (SM64_SH) {
+        if (m.action == ACT_LONG_JUMP_LAND) {
+            queue_rumble_data(5, 40);
+        }
     }
-}
     return false;
 }
 
@@ -775,15 +774,14 @@ s32 act_dive(MarioState* m) {
 
         case AIR_STEP_LANDED:
             if (should_get_stuck_in_ground(m) && m.faceAngle[0] == -0x2AAA) {
-version (SM64_SH) {
-                queue_rumble_data(5, 80);
-}
-version (SM64_JP) {
-                play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
-}
-else {
-                play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
-}
+                version (SM64_SH) {
+                    queue_rumble_data(5, 80);
+                }
+                version (SM64_JP) {
+                    play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
+                } else {
+                    play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
+                }
                 m.particleFlags |= PARTICLE_MIST_CIRCLE;
                 drop_and_set_mario_action(m, ACT_HEAD_STUCK_IN_GROUND, 0);
             } else if (!check_fall_damage(m, ACT_HARD_FORWARD_GROUND_KB)) {
@@ -867,9 +865,9 @@ s32 act_water_jump(MarioState* m) {
             break;
 
         case AIR_STEP_GRABBED_LEDGE:
-version (SM64_JP) {
-            set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
-}
+            version (SM64_JP) {
+                set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
+            }
             set_mario_action(m, ACT_LEDGE_GRAB, 0);
             set_camera_mode(m.area.camera, m.area.camera.defMode, 1);
             break;
@@ -996,15 +994,14 @@ s32 act_ground_pound(MarioState* m) {
         stepResult = perform_air_step(m, 0);
         if (stepResult == AIR_STEP_LANDED) {
             if (should_get_stuck_in_ground(m)) {
-version (SM64_SH) {
-                queue_rumble_data(5, 80);
-}
-version (SM64_JP) {
-                play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
-}
-else {
-                play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
-}
+                version (SM64_SH) {
+                    queue_rumble_data(5, 80);
+                }
+                version (SM64_JP) {
+                    play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
+                } else {
+                    play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
+                }
                 m.particleFlags |= PARTICLE_MIST_CIRCLE;
                 set_mario_action(m, ACT_BUTT_STUCK_IN_GROUND, 0);
             } else {
@@ -1054,9 +1051,9 @@ s32 act_burning_jump(MarioState* m) {
     if (m.health < 0x100) {
         m.health = 0xFF;
     }
-version (SM64_SH) {
-    reset_rumble_timers();
-}
+    version (SM64_SH) {
+        reset_rumble_timers();
+    }
     return false;
 }
 
@@ -1076,9 +1073,9 @@ s32 act_burning_fall(MarioState* m) {
     if (m.health < 0x100) {
         m.health = 0xFF;
     }
-version (SM64_SH) {
-    reset_rumble_timers();
-}
+    version (SM64_SH) {
+        reset_rumble_timers();
+    }
     return false;
 }
 
@@ -1129,9 +1126,9 @@ s32 act_crazy_box_bounce(MarioState* m) {
                 m.heldObj = null;
                 set_mario_action(m, ACT_STOMACH_SLIDE, 0);
             }
-version (SM64_SH) {
-            queue_rumble_data(5, 80);
-}
+            version (SM64_SH) {
+                queue_rumble_data(5, 80);
+            }
             m.particleFlags |= PARTICLE_MIST_CIRCLE;
             break;
 
@@ -1163,22 +1160,21 @@ u32 common_air_knockback_step(MarioState* m, u32 landAction, u32 hardFallAction,
             break;
 
         case AIR_STEP_LANDED:
-version (SM64_SH) {
-            if (m.action == ACT_SOFT_BONK) {
-                queue_rumble_data(5, 80);
+            version (SM64_SH) {
+                if (m.action == ACT_SOFT_BONK) {
+                    queue_rumble_data(5, 80);
+                }
             }
-}
             if (!check_fall_damage_or_get_stuck(m, hardFallAction)) {
-version (SM64_JP) {
-                if (m.action == ACT_THROWN_FORWARD || m.action == ACT_THROWN_BACKWARD) {
-                    set_mario_action(m, landAction, m.hurtCounter);
+                version (SM64_JP) {
+                    if (m.action == ACT_THROWN_FORWARD || m.action == ACT_THROWN_BACKWARD) {
+                        set_mario_action(m, landAction, m.hurtCounter);
+                    } else {
+                        set_mario_action(m, landAction, m.actionArg);
+                    }
                 } else {
                     set_mario_action(m, landAction, m.actionArg);
                 }
-}
-else {
-                set_mario_action(m, landAction, m.actionArg);
-}
             }
             break;
 
@@ -1217,12 +1213,11 @@ s32 act_backward_air_kb(MarioState* m) {
         return true;
     }
 
-version (SM64_JP) {
-    play_knockback_sound(m);
-}
-else {
-    play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-}
+    version (SM64_JP) {
+        play_knockback_sound(m);
+    } else {
+        play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
+    }
     common_air_knockback_step(m, ACT_BACKWARD_GROUND_KB, ACT_HARD_BACKWARD_GROUND_KB, 0x0002, -16.0f);
     return false;
 }
@@ -1232,35 +1227,32 @@ s32 act_forward_air_kb(MarioState* m) {
         return true;
     }
 
-version (SM64_JP) {
-    play_knockback_sound(m);
-}
-else {
-    play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-}
+    version (SM64_JP) {
+        play_knockback_sound(m);
+    } else {
+        play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
+    }
     common_air_knockback_step(m, ACT_FORWARD_GROUND_KB, ACT_HARD_FORWARD_GROUND_KB, 0x002D, 16.0f);
     return false;
 }
 
 s32 act_hard_backward_air_kb(MarioState* m) {
-version (SM64_JP) {
-    play_knockback_sound(m);
-}
-else {
-    play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-}
+    version (SM64_JP) {
+        play_knockback_sound(m);
+    } else {
+        play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
+    }
     common_air_knockback_step(m, ACT_HARD_BACKWARD_GROUND_KB, ACT_HARD_BACKWARD_GROUND_KB, 0x0002,
                               -16.0f);
     return false;
 }
 
 s32 act_hard_forward_air_kb(MarioState* m) {
-version (SM64_JP) {
-    play_knockback_sound(m);
-}
-else {
-    play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-}
+    version (SM64_JP) {
+        play_knockback_sound(m);
+    } else {
+        play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
+    }
     common_air_knockback_step(m, ACT_HARD_FORWARD_GROUND_KB, ACT_HARD_FORWARD_GROUND_KB, 0x002D, 16.0f);
     return false;
 }
@@ -1312,12 +1304,11 @@ s32 act_soft_bonk(MarioState* m) {
         return true;
     }
 
-version (SM64) {
-    play_knockback_sound(m);
-}
-else {
-    play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-}
+    version (SM64) {
+        play_knockback_sound(m);
+    } else {
+        play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
+    }
 
     common_air_knockback_step(m, ACT_FREEFALL_LAND, ACT_HARD_BACKWARD_GROUND_KB, 0x0056, m.forwardVel);
     return false;
@@ -1345,9 +1336,9 @@ s32 act_getting_blown(MarioState* m) {
     }
 
     mario_set_forward_vel(m, m.forwardVel);
-version (SM64_JP) {
-    play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-}
+    version (SM64_JP) {
+        play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
+    }
     set_mario_animation(m, MARIO_ANIM_BACKWARD_AIR_KB);
 
     switch (perform_air_step(m, 0)) {
@@ -1605,15 +1596,14 @@ s32 act_hold_butt_slide_air(MarioState* m) {
 }
 
 s32 act_lava_boost(MarioState* m) {
-version (SM64_SH) {
-    if (!(m.flags & MARIO_MARIO_SOUND_PLAYED)) {
+    version (SM64_SH) {
+        if (!(m.flags & MARIO_MARIO_SOUND_PLAYED)) {
+            play_sound_if_no_flag(m, SOUND_MARIO_ON_FIRE, MARIO_MARIO_SOUND_PLAYED);
+            queue_rumble_data(5, 80);
+        }
+    } else {
         play_sound_if_no_flag(m, SOUND_MARIO_ON_FIRE, MARIO_MARIO_SOUND_PLAYED);
-        queue_rumble_data(5, 80);
     }
-}
-else {
-    play_sound_if_no_flag(m, SOUND_MARIO_ON_FIRE, MARIO_MARIO_SOUND_PLAYED);
-}
 
     if (!(m.input & INPUT_NONZERO_ANALOG)) {
         m.forwardVel = approach_f32(m.forwardVel, 0.0f, 0.35f, 0.35f);
@@ -1630,9 +1620,9 @@ else {
                 }
                 m.vel[1] = 84.0f;
                 play_sound(SOUND_MARIO_ON_FIRE, m.marioObj.header.gfx.cameraToObject.ptr);
-version (SM64_SH) {
-                queue_rumble_data(5, 80);
-}
+                version (SM64_SH) {
+                    queue_rumble_data(5, 80);
+                }
             } else {
                 play_mario_heavy_landing_sound(m, SOUND_ACTION_TERRAIN_BODY_HIT_GROUND);
                 if (m.actionState < 2 && m.vel[1] < 0.0f) {
@@ -1670,9 +1660,9 @@ version (SM64_SH) {
     }
 
     m.marioBodyState.eyeState = MARIO_EYES_DEAD;
-version (SM64_SH) {
-    reset_rumble_timers();
-}
+    version (SM64_SH) {
+        reset_rumble_timers();
+    }
     return false;
 }
 
@@ -1786,9 +1776,9 @@ s32 act_shot_from_cannon(MarioState* m) {
             set_mario_action(m, ACT_DIVE_SLIDE, 0);
             m.faceAngle[0] = 0;
             set_camera_mode(m.area.camera, m.area.camera.defMode, 1);
-version (SM64_SH) {
-            queue_rumble_data(5, 80);
-}
+            version (SM64_SH) {
+                queue_rumble_data(5, 80);
+            }
             break;
 
         case AIR_STEP_HIT_WALL:
@@ -1822,9 +1812,9 @@ version (SM64_SH) {
     if (m.vel[1] > 0.0f) {
         m.particleFlags |= PARTICLE_DUST;
     }
-version (SM64_SH) {
-    reset_rumble_timers();
-}
+    version (SM64_SH) {
+        reset_rumble_timers();
+    }
     return false;
 }
 
@@ -1887,9 +1877,9 @@ s32 act_flying(MarioState* m) {
 
             m.faceAngle[0] = 0;
             set_camera_mode(m.area.camera, m.area.camera.defMode, 1);
-version (SM64_SH) {
-            queue_rumble_data(5, 80);
-}
+            version (SM64_SH) {
+                queue_rumble_data(5, 80);
+            }
             break;
 
         case AIR_STEP_HIT_WALL:
@@ -1940,13 +1930,13 @@ version (SM64_SH) {
 
     if (startPitch <= 0 && m.faceAngle[0] > 0 && m.forwardVel >= 48.0f) {
         play_sound(SOUND_ACTION_FLYING_FAST, m.marioObj.header.gfx.cameraToObject.ptr);
-version (SM64_JP) {
-        play_sound(SOUND_MARIO_YAHOO_WAHA_YIPPEE + ((gAudioRandom % 5) << 16),
-                   m.marioObj.header.gfx.cameraToObject.ptr);
-}
-version (SM64_SH) {
-        queue_rumble_data(50, 40);
-}
+        version (SM64_JP) {
+            play_sound(SOUND_MARIO_YAHOO_WAHA_YIPPEE + ((gAudioRandom % 5) << 16),
+                       m.marioObj.header.gfx.cameraToObject.ptr);
+        }
+        version (SM64_SH) {
+            queue_rumble_data(50, 40);
+        }
     }
 
     play_sound(SOUND_MOVING_FLYING, m.marioObj.header.gfx.cameraToObject.ptr);
@@ -1960,9 +1950,9 @@ s32 act_riding_hoot(MarioState* m) {
         m.usedObj.oHootMarioReleaseTime = gGlobalTimer;
 
         play_sound_if_no_flag(m, SOUND_MARIO_UH, MARIO_MARIO_SOUND_PLAYED);
-version (SM64_SH) {
-        queue_rumble_data(4, 40);
-}
+        version (SM64_SH) {
+            queue_rumble_data(4, 40);
+        }
         return set_mario_action(m, ACT_FREEFALL, 0);
     }
 
@@ -1987,27 +1977,26 @@ version (SM64_SH) {
 }
 
 s32 act_flying_triple_jump(MarioState* m) {
-version (SM64_JP) {
-    if (m.input & (INPUT_B_PRESSED | INPUT_Z_PRESSED)) {
-        if (m.area.camera.mode == CAMERA_MODE_BEHIND_MARIO) {
-            set_camera_mode(m.area.camera, m.area.camera.defMode, 1);
+    version (SM64_JP) {
+        if (m.input & (INPUT_B_PRESSED | INPUT_Z_PRESSED)) {
+            if (m.area.camera.mode == CAMERA_MODE_BEHIND_MARIO) {
+                set_camera_mode(m.area.camera, m.area.camera.defMode, 1);
+            }
+            if (m.input & INPUT_B_PRESSED) {
+                return set_mario_action(m, ACT_DIVE, 0);
+            } else {
+                return set_mario_action(m, ACT_GROUND_POUND, 0);
+            }
         }
+    } else {
         if (m.input & INPUT_B_PRESSED) {
             return set_mario_action(m, ACT_DIVE, 0);
-        } else {
+        }
+
+        if (m.input & INPUT_Z_PRESSED) {
             return set_mario_action(m, ACT_GROUND_POUND, 0);
         }
     }
-}
-else {
-    if (m.input & INPUT_B_PRESSED) {
-        return set_mario_action(m, ACT_DIVE, 0);
-    }
-
-    if (m.input & INPUT_Z_PRESSED) {
-        return set_mario_action(m, ACT_GROUND_POUND, 0);
-    }
-}
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAHOO);
     if (m.actionState == 0) {
@@ -2019,9 +2008,9 @@ else {
 
         if (is_anim_past_end(m)) {
             set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
-version (SM64_SH) {
-            queue_rumble_data(8, 80);
-}
+            version (SM64_SH) {
+                queue_rumble_data(8, 80);
+            }
             m.actionState = 1;
         }
     }
@@ -2084,9 +2073,9 @@ s32 act_vertical_wind(MarioState* m) {
         set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING_FLIP);
         if (m.marioObj.header.gfx.animInfo.animFrame == 1) {
             play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
-version (SM64_SH) {
-            queue_rumble_data(8, 80);
-}
+            version (SM64_SH) {
+                queue_rumble_data(8, 80);
+            }
         }
 
         if (is_anim_past_end(m)) {
@@ -2218,9 +2207,9 @@ s32 act_roll_air(MarioState* m) {
             break;
 
         case AIR_STEP_HIT_WALL:
-version (SM64_SH) {
-            queue_rumble_data(5, 40);
-}
+            version (SM64_SH) {
+                queue_rumble_data(5, 40);
+            }
             mario_bonk_reflection(m, false);
             m.faceAngle[1] += 0x8000;
 
@@ -2317,15 +2306,14 @@ s32 act_spin_pound(MarioState* m) {
     stepResult = perform_air_step(m, 0);
     if (stepResult == AIR_STEP_LANDED) {
         if (should_get_stuck_in_ground(m)) {
-version (SM64_SH) {
-            queue_rumble_data(5, 80);
-}
-version (SM64_JP) {
-            play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
-}
-else {
-            play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
-}
+            version (SM64_SH) {
+                queue_rumble_data(5, 80);
+            }
+            version (SM64_JP) {
+                play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
+            } else {
+                play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
+            }
             m.particleFlags |= PARTICLE_MIST_CIRCLE;
             set_mario_action(m, ACT_BUTT_STUCK_IN_GROUND, 0);
         } else {
