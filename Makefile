@@ -218,7 +218,7 @@ ACTOR_DIR := actors
 LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 
 # Directories containing source files
-SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers src/dsrc src/dsrc/engine src/dsrc/game src/dsrc/audio src/dsrc/menu src/dsrc/buffers actors levels bin bin/$(VERSION) data assets
+SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin bin/$(VERSION) data assets
 ASM_DIRS := lib
 ifeq ($(TARGET_N64),1)
   ASM_DIRS := asm $(ASM_DIRS)
@@ -273,7 +273,7 @@ include Makefile.split
 LEVEL_C_FILES := $(wildcard levels/*/leveldata.c) $(wildcard levels/*/script.c) $(wildcard levels/*/geo.c)
 C_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c)) $(LEVEL_C_FILES)
 CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
-D_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.d))
+D_FILES := $(shell find src/dsrc/ -type f -name '*.d')
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
 ULTRA_C_FILES := $(foreach dir,$(ULTRA_SRC_DIRS),$(wildcard $(dir)/*.c))
 GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
@@ -327,7 +327,7 @@ SOUND_OBJ_FILES := $(SOUND_BIN_DIR)/sound_data.o
 # Object files
 O_FILES := $(foreach file,$(C_FILES),$(BUILD_DIR)/$(file:.c=.o)) \
            $(foreach file,$(CXX_FILES),$(BUILD_DIR)/$(file:.cpp=.o)) \
-           $(foreach file,$(D_FILES),$(BUILD_DIR)/$(file:.d=.o)) \
+           $(BUILD_DIR)/sources_d.o \
            $(foreach file,$(S_FILES),$(BUILD_DIR)/$(file:.s=.o)) \
            $(foreach file,$(GENERATED_C_FILES),$(file:.c=.o))
 
@@ -352,6 +352,26 @@ SEG_FILES := $(SEGMENT_ELF_FILES) $(ACTOR_ELF_FILES) $(LEVEL_ELF_FILES)
 ##################### Compiler Options #######################
 INCLUDE_CFLAGS := -I include -I $(BUILD_DIR) -I $(BUILD_DIR)/include -I src -I .
 ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
+
+DFLAGS := $(OPT_FLAGS) -betterC
+
+ifeq ($(OPT_FLAGS),-g)
+	D_FLAGS := --d-debug
+endif
+
+ifeq ($(NON_MATCHING),1)
+	DFLAGS := $(DFLAGS) --d-version=SM64_Non_Matching --d-version=SM64_Avoid_UB
+endif
+
+ifeq ($(VERSION),jp)
+	DFLAGS := $(DFLAGS) --d-version=SM64_JP
+else ifeq ($(VERSION),us)
+	DFLAGS := $(DFLAGS) --d-version=SM64_US
+else ifeq ($(VERSION),eu)
+	DFLAGS := $(DFLAGS) --d-version=SM64_EU
+else ifeq ($(VERSION),sh)
+	DFLAGS := $(DFLAGS) --d-version=SM64_SH
+endif
 
 ifeq ($(TARGET_N64),1)
 IRIX_ROOT := tools/ido5.3_compiler
@@ -793,8 +813,8 @@ $(BUILD_DIR)/%.o: %.c
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(BUILD_DIR)/%.o: %.d
-	ldc2 -betterC -c -I=src/dsrc --d-version=SM64_Avoid_UB -of$@ $<
+$(BUILD_DIR)/sources_d.o: $(D_FILES)
+	ldc2 -c $(DFLAGS) -of$@ $^
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<
