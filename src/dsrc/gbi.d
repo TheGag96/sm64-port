@@ -1,5 +1,7 @@
 module gbi;
 
+import ultra64;
+
 /**************************************************************************
  *									  *
  *		 Copyright (C) 1994, Silicon Graphics, Inc.		  *
@@ -975,6 +977,23 @@ union Vp {
 /* use for setscissor also */
 
 /* use for loadblock also, th is dxt */
+
+struct Gwords
+{
+    uintptr_t w0;
+    uintptr_t w1;
+}
+
+union Gfx
+{
+    Gwords words;
+
+    /* use for setscissor also */
+
+    /* use for loadblock also, th is dxt */
+
+    long force_structure_alignment;
+}
 
 /*
  * Macros to assemble the graphics display list

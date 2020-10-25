@@ -3,6 +3,7 @@ module game.mario;
 import ultra64, types;
 
 public import mario_animation_ids;
+public import mario_geo_switch_case_ids;
 
 extern (C):
 

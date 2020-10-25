@@ -1,6 +1,6 @@
 module game.camera;
 
-import ultra64, types, engine.graph_node, level_table;
+import ultra64, types, engine.graph_node, level_table, gbi;
 
 //#include "../engine/geo_layout.h"
 //#include "../../include/level_table.h"

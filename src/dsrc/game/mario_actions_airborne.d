@@ -1,6 +1,7 @@
 module game.mario_actions_airborne;
 
-import sm64, audio.external, engine.math_util, surface_terrains, game.mario;
+import sm64, audio.external, engine.math_util, surface_terrains, game.mario, game.camera, game.mario_step,
+       game.interaction, game.level_update, game.save_file, game.game_init;
 
 extern (C):
 
@@ -429,6 +430,8 @@ version (SM64_SH) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return stepResult;
@@ -685,6 +688,8 @@ s32 act_riding_shell_air(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     m.marioObj.header.gfx.pos[1] += 42.0f;
@@ -731,6 +736,8 @@ s32 act_twirling(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     m.marioObj.header.gfx.angle[1] += m.twirlYaw;
@@ -804,6 +811,8 @@ else {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return false;
@@ -832,6 +841,8 @@ s32 act_air_throw(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return false;
@@ -866,6 +877,8 @@ version (SM64_JP) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     if (m.prevAction == ACT_WATER_GROUND_POUND_JUMP) {
@@ -902,6 +915,8 @@ s32 act_hold_water_jump(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return false;
@@ -930,10 +945,12 @@ s32 act_steep_jump(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     set_mario_animation(m, MARIO_ANIM_SINGLE_JUMP);
-    m.marioObj.header.gfx.angle[1] = m.marioObj.oMarioSteepJumpYaw;
+    m.marioObj.header.gfx.angle[1] = cast(s16) (m.marioObj.oMarioSteepJumpYaw);
     return false;
 }
 
@@ -1084,6 +1101,8 @@ s32 act_crazy_box_bounce(MarioState* m) {
                 m.vel[1] = 100.0f;
                 minSpeed = 48.0f;
                 break;
+
+            default: break;
         }
 
         play_sound(minSpeed < 40.0f ? SOUND_GENERAL_BOING1 : SOUND_GENERAL_BOING2,
@@ -1123,6 +1142,8 @@ version (SM64_SH) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     m.marioObj.header.gfx.angle[0] = atan2s(m.forwardVel, -m.vel[1]);
@@ -1175,6 +1196,8 @@ else {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return stepResult;
@@ -1277,7 +1300,7 @@ s32 act_thrown_forward(MarioState* m) {
             pitch = 0x1800;
         }
 
-        m.marioObj.header.gfx.angle[0] = pitch + 0x1800;
+        m.marioObj.header.gfx.angle[0] = cast(s16) (pitch + 0x1800);
     }
 
     m.forwardVel *= 0.98f;
@@ -1342,6 +1365,8 @@ version (SM64_JP) {
 
             mario_set_forward_vel(m, -m.forwardVel);
             break;
+
+        default: break;
     }
 
     return false;
@@ -1401,6 +1426,8 @@ s32 act_wall_slide(MarioState* m) {
                 return set_mario_action(m, ACT_FREEFALL_LAND, 0);
             }
             break;
+
+        default: break;
     }
 
     if (m.wall == null) {
@@ -1444,6 +1471,8 @@ s32 act_forward_rollout(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     if (m.actionState == 1 && is_anim_past_end(m)) {
@@ -1485,6 +1514,8 @@ s32 act_backward_rollout(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     if (m.actionState == 1 && m.marioObj.header.gfx.animInfo.animFrame == 2) {
@@ -1522,6 +1553,8 @@ s32 act_butt_slide_air(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     set_mario_animation(m, MARIO_ANIM_SLIDE);
@@ -1563,6 +1596,8 @@ s32 act_hold_butt_slide_air(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     set_mario_animation(m, MARIO_ANIM_SLIDING_ON_BOTTOM_WITH_LIGHT_OBJ);
@@ -1617,6 +1652,8 @@ version (SM64_SH) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     set_mario_animation(m, MARIO_ANIM_FIRE_LAVA_BURN);
@@ -1685,6 +1722,8 @@ s32 act_slide_kick(MarioState* m) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return false;
@@ -1720,6 +1759,8 @@ s32 act_jump_kick(MarioState* m) {
         case AIR_STEP_HIT_WALL:
             mario_set_forward_vel(m, 0.0f);
             break;
+
+        default: break;
     }
 
     return false;
@@ -1766,6 +1807,8 @@ version (SM64_SH) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     if ((m.flags & MARIO_WING_CAP) && m.vel[1] < 0.0f) {
@@ -1887,6 +1930,8 @@ version (SM64_SH) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     if (m.faceAngle[0] > 0x800 && m.forwardVel >= 48.0f) {
@@ -1925,7 +1970,7 @@ version (SM64_SH) {
     m.pos[1] = m.usedObj.oPosY - 92.5f;
     m.pos[2] = m.usedObj.oPosZ;
 
-    m.faceAngle[1] = 0x4000 - m.usedObj.oMoveAngleYaw;
+    m.faceAngle[1] = cast(s16) (0x4000 - m.usedObj.oMoveAngleYaw);
 
     if (m.actionState == 0) {
         set_mario_animation(m, MARIO_ANIM_HANG_ON_CEILING);
@@ -1937,7 +1982,7 @@ version (SM64_SH) {
 
     vec3f_set(m.vel, 0.0f, 0.0f, 0.0f);
     vec3f_set(m.marioObj.header.gfx.pos, m.pos[0], m.pos[1], m.pos[2]);
-    vec3s_set(m.marioObj.header.gfx.angle, 0, 0x4000 - m.faceAngle[1], 0);
+    vec3s_set(m.marioObj.header.gfx.angle, 0, cast(s16) (0x4000 - m.faceAngle[1]), 0);
     return false;
 }
 
@@ -2017,6 +2062,8 @@ version (SM64_SH) {
         case AIR_STEP_HIT_LAVA_WALL:
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     return false;
@@ -2029,7 +2076,7 @@ s32 act_top_of_pole_jump(MarioState* m) {
 }
 
 s32 act_vertical_wind(MarioState* m) {
-    s16 intendedDYaw = m.intendedYaw - m.faceAngle[1];
+    s16 intendedDYaw = cast(s16) (m.intendedYaw - m.faceAngle[1]);
     f32 intendedMag = m.intendedMag / 32.0f;
 
     play_sound_if_no_flag(m, SOUND_MARIO_HERE_WE_GO, MARIO_MARIO_SOUND_PLAYED);
@@ -2059,10 +2106,12 @@ version (SM64_SH) {
         case AIR_STEP_HIT_WALL:
             mario_set_forward_vel(m, -16.0f);
             break;
+
+        default: break;
     }
 
-    m.marioObj.header.gfx.angle[0] = cast(s16)(6144.0f * intendedMag * coss(intendedDYaw));
-    m.marioObj.header.gfx.angle[2] = cast(s16)(-4096.0f * intendedMag * sins(intendedDYaw));
+    m.marioObj.header.gfx.angle[0] = cast(s16) ( 6144.0f * intendedMag * coss(intendedDYaw));
+    m.marioObj.header.gfx.angle[2] = cast(s16) (-4096.0f * intendedMag * sins(intendedDYaw));
     return false;
 }
 
@@ -2092,6 +2141,8 @@ s32 act_special_triple_jump(MarioState* m) {
         case AIR_STEP_HIT_WALL:
             mario_bonk_reflection(m, true);
             break;
+
+        default: break;
     }
 
     if (m.actionState == 0 || m.vel[1] > 0.0f) {
@@ -2180,11 +2231,13 @@ version (SM64_SH) {
             m.particleFlags |= PARTICLE_VERTICAL_STAR;
             return set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
             break;
+
+        default: break;
     }
 
     m.spareFloat += 0x80 * m.forwardVel;
     if (m.spareFloat > 0x10000) m.spareFloat -= 0x10000;
-    set_anim_to_frame(m, 10 * m.spareFloat / 0x10000);
+    set_anim_to_frame(m, cast(s16) (10 * m.spareFloat / 0x10000));
 
     m.spareInt++;
     m.actionTimer++;
@@ -2248,7 +2301,7 @@ s32 act_spin_pound(MarioState* m) {
     f32 spinDirFactor;
 
     if (m.actionTimer == 0) {
-        m.actionState = m.actionArg;
+        m.actionState = cast(u16) m.actionArg;
     }
 
     spinDirFactor = (m.actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
@@ -2342,6 +2395,8 @@ s32 act_ledge_parkour(MarioState* m) {
             m.marioObj.header.gfx.angle[1] += 0x8000;
             lava_boost_on_wall(m);
             break;
+
+        default: break;
     }
 
     m.actionTimer++;

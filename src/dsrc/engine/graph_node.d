@@ -6,23 +6,6 @@ import core.stdc.stdint;
 
 extern (C):
 
-struct Gwords
-{
-    uintptr_t w0;
-    uintptr_t w1;
-}
-
-union Gfx
-{
-    Gwords words;
-
-    /* use for setscissor also */
-
-    /* use for loadblock also, th is dxt */
-
-    long force_structure_alignment;
-}
-
 enum GRAPH_RENDER_ACTIVE = 1 << 0;
 enum GRAPH_RENDER_CHILDREN_FIRST = 1 << 1;
 enum GRAPH_RENDER_BILLBOARD = 1 << 2;

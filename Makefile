@@ -794,7 +794,7 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.o: %.d
-	ldc2 -betterC -c -I=src/dsrc -of$@ $<
+	ldc2 -betterC -c -I=src/dsrc --d-version=SM64_Avoid_UB -of$@ $<
 
 $(BUILD_DIR)/%.o: $(BUILD_DIR)/%.c
 	@$(CC_CHECK) $(CC_CHECK_CFLAGS) -MMD -MP -MT $@ -MF $(BUILD_DIR)/$*.d $<

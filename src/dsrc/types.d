@@ -1,6 +1,6 @@
 module types;
 
-import ultra64, game.area, game.camera;
+import ultra64, game.area, game.camera, game.object_helpers, mario_geo_switch_case_ids;
 
 // This file contains various data types used in Super Mario 64 that don't yet
 // have an appropriate header.
@@ -178,7 +178,7 @@ struct Object_
         }
     } 
     _anon_1 rawData;
-static if (size_t.sizeof != 8) {
+static if (size_t.sizeof == 8) {
     union _anon_2 {
         s16[0x50]* asS16P;
         s32[0x50]* asS32P;
@@ -254,12 +254,12 @@ struct Surface
 struct MarioBodyState
 {
     /*0x00*/ u32 action;
-    /*0x04*/ s8 capState; /// see MarioCapGSCId
-    /*0x05*/ s8 eyeState;
-    /*0x06*/ s8 handState;
+    /*0x04*/ MarioCapGSCId capState;
+    /*0x05*/ MarioEyesGSCId eyeState;
+    /*0x06*/ MarioHandGSCId handState;
     /*0x07*/ s8 wingFlutter; /// whether Mario's wing cap wings are fluttering
     /*0x08*/ s16 modelState;
-    /*0x0A*/ s8 grabPos;
+    /*0x0A*/ MarioGrabPosGSCId grabPos;
     /*0x0B*/ u8 punchState; /// 2 bits for type of punch, 6 bits for punch animation timer
     /*0x0C*/ Vec3s torsoAngle;
     /*0x12*/ Vec3s headAngle;
@@ -355,3 +355,5 @@ struct MarioState
     /*0xD0*/ s16 spinDirection;
     /*0xD2*/ u16 spinBufferTimer;
 };
+
+public import object_fields;
