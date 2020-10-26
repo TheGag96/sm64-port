@@ -81,7 +81,7 @@ s32 approach_s32 (s32 current, s32 target, s32 inc, s32 dec);
 f32 approach_f32 (f32 current, f32 target, f32 inc, f32 dec);
 s16 atan2s (f32 y, f32 x);
 float atan2f (f32 a, f32 b);
-void spline_get_weights (Vec4f result, f32 t, s32 c);
+void spline_get_weights (ref Vec4f result, f32 t, s32 c);
 void anim_spline_init (Vec4s* keyFrames);
 s32 anim_spline_poll (ref Vec3f result);
 

@@ -26,7 +26,7 @@ struct SaveFile
 
     // Star flags for each course.
     // The most significant bit of the byte *following* each course is set if the
-    // cannon is open.
+    // cannon is oaspen.
     ubyte[COURSE_COUNT] courseStars;
 
     ubyte[COURSE_STAGES_COUNT] courseCoinScores;
@@ -148,7 +148,7 @@ int save_file_get_course_coin_score (int fileIndex, int courseIndex);
 int save_file_is_cannon_unlocked ();
 void save_file_set_cannon_unlocked ();
 void save_file_set_cap_pos (short x, short y, short z);
-int save_file_get_cap_pos (Vec3s capPos);
+int save_file_get_cap_pos (ref Vec3s capPos);
 void save_file_set_sound_mode (ushort mode);
 ushort save_file_get_sound_mode ();
 void save_file_move_cap_to_default_location ();

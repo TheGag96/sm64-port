@@ -1,5 +1,7 @@
 module level_table;
 
+import util;
+
 extern (C):
 
 // For LEVEL_NAME defines, see level_defines.h.
@@ -52,3 +54,4 @@ enum LevelNum
     LEVEL_MAX = LEVEL_COUNT - 1,
     LEVEL_MIN = LEVEL_NONE + 1
 }
+mixin importEnumMembers!LevelNum;

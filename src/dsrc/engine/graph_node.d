@@ -6,12 +6,12 @@ import core.stdc.stdint;
 
 extern (C):
 
-enum GRAPH_RENDER_ACTIVE = 1 << 0;
+enum GRAPH_RENDER_ACTIVE         = 1 << 0;
 enum GRAPH_RENDER_CHILDREN_FIRST = 1 << 1;
-enum GRAPH_RENDER_BILLBOARD = 1 << 2;
-enum GRAPH_RENDER_Z_BUFFER = 1 << 3;
-enum GRAPH_RENDER_INVISIBLE = 1 << 4;
-enum GRAPH_RENDER_HAS_ANIMATION = 1 << 5;
+enum GRAPH_RENDER_BILLBOARD      = 1 << 2;
+enum GRAPH_RENDER_Z_BUFFER       = 1 << 3;
+enum GRAPH_RENDER_INVISIBLE      = 1 << 4;
+enum GRAPH_RENDER_HAS_ANIMATION  = 1 << 5;
 
 // Whether the node type has a function pointer of type GraphNodeFunc
 enum GRAPH_NODE_TYPE_FUNCTIONAL = 0x100;
@@ -20,28 +20,28 @@ enum GRAPH_NODE_TYPE_FUNCTIONAL = 0x100;
 enum GRAPH_NODE_TYPE_400 = 0x400;
 
 // The discriminant for different types of geo nodes
-enum GRAPH_NODE_TYPE_ROOT = 0x001;
-enum GRAPH_NODE_TYPE_ORTHO_PROJECTION = 0x002;
-enum GRAPH_NODE_TYPE_PERSPECTIVE = 0x003 | GRAPH_NODE_TYPE_FUNCTIONAL;
-enum GRAPH_NODE_TYPE_MASTER_LIST = 0x004;
-enum GRAPH_NODE_TYPE_START = 0x00A;
-enum GRAPH_NODE_TYPE_LEVEL_OF_DETAIL = 0x00B;
-enum GRAPH_NODE_TYPE_SWITCH_CASE = 0x00C | GRAPH_NODE_TYPE_FUNCTIONAL;
-enum GRAPH_NODE_TYPE_CAMERA = 0x014 | GRAPH_NODE_TYPE_FUNCTIONAL;
+enum GRAPH_NODE_TYPE_ROOT                 = 0x001;
+enum GRAPH_NODE_TYPE_ORTHO_PROJECTION     = 0x002;
+enum GRAPH_NODE_TYPE_PERSPECTIVE          = 0x003 | GRAPH_NODE_TYPE_FUNCTIONAL;
+enum GRAPH_NODE_TYPE_MASTER_LIST          = 0x004;
+enum GRAPH_NODE_TYPE_START                = 0x00A;
+enum GRAPH_NODE_TYPE_LEVEL_OF_DETAIL      = 0x00B;
+enum GRAPH_NODE_TYPE_SWITCH_CASE          = 0x00C | GRAPH_NODE_TYPE_FUNCTIONAL;
+enum GRAPH_NODE_TYPE_CAMERA               = 0x014 | GRAPH_NODE_TYPE_FUNCTIONAL;
 enum GRAPH_NODE_TYPE_TRANSLATION_ROTATION = 0x015;
-enum GRAPH_NODE_TYPE_TRANSLATION = 0x016;
-enum GRAPH_NODE_TYPE_ROTATION = 0x017;
-enum GRAPH_NODE_TYPE_OBJECT = 0x018;
-enum GRAPH_NODE_TYPE_ANIMATED_PART = 0x019;
-enum GRAPH_NODE_TYPE_BILLBOARD = 0x01A;
-enum GRAPH_NODE_TYPE_DISPLAY_LIST = 0x01B;
-enum GRAPH_NODE_TYPE_SCALE = 0x01C;
-enum GRAPH_NODE_TYPE_SHADOW = 0x028;
-enum GRAPH_NODE_TYPE_OBJECT_PARENT = 0x029;
-enum GRAPH_NODE_TYPE_GENERATED_LIST = 0x02A | GRAPH_NODE_TYPE_FUNCTIONAL;
-enum GRAPH_NODE_TYPE_BACKGROUND = 0x02C | GRAPH_NODE_TYPE_FUNCTIONAL;
-enum GRAPH_NODE_TYPE_HELD_OBJ = 0x02E | GRAPH_NODE_TYPE_FUNCTIONAL;
-enum GRAPH_NODE_TYPE_CULLING_RADIUS = 0x02F;
+enum GRAPH_NODE_TYPE_TRANSLATION          = 0x016;
+enum GRAPH_NODE_TYPE_ROTATION             = 0x017;
+enum GRAPH_NODE_TYPE_OBJECT               = 0x018;
+enum GRAPH_NODE_TYPE_ANIMATED_PART        = 0x019;
+enum GRAPH_NODE_TYPE_BILLBOARD            = 0x01A;
+enum GRAPH_NODE_TYPE_DISPLAY_LIST         = 0x01B;
+enum GRAPH_NODE_TYPE_SCALE                = 0x01C;
+enum GRAPH_NODE_TYPE_SHADOW               = 0x028;
+enum GRAPH_NODE_TYPE_OBJECT_PARENT        = 0x029;
+enum GRAPH_NODE_TYPE_GENERATED_LIST       = 0x02A | GRAPH_NODE_TYPE_FUNCTIONAL;
+enum GRAPH_NODE_TYPE_BACKGROUND           = 0x02C | GRAPH_NODE_TYPE_FUNCTIONAL;
+enum GRAPH_NODE_TYPE_HELD_OBJ             = 0x02E | GRAPH_NODE_TYPE_FUNCTIONAL;
+enum GRAPH_NODE_TYPE_CULLING_RADIUS       = 0x02F;
 
 // The number of master lists. A master list determines the order and render
 // mode with which display lists are drawn.
@@ -49,19 +49,19 @@ enum GFX_NUM_MASTER_LISTS = 8;
 
 // Passed as first argument to a GraphNodeFunc to give information about in
 // which context it was called and what it is expected to do.
-enum GEO_CONTEXT_CREATE = 0; // called when node is created from a geo command
-enum GEO_CONTEXT_RENDER = 1; // called from rendering_graph_node.c
+enum GEO_CONTEXT_CREATE      = 0; // called when node is created from a geo command
+enum GEO_CONTEXT_RENDER      = 1; // called from rendering_graph_node.c
 enum GEO_CONTEXT_AREA_UNLOAD = 2; // called when unloading an area
-enum GEO_CONTEXT_AREA_LOAD = 3; // called when loading an area
-enum GEO_CONTEXT_AREA_INIT = 4; // called when initializing the 8 areas
-enum GEO_CONTEXT_HELD_OBJ = 5; // called when processing a GraphNodeHeldObj
+enum GEO_CONTEXT_AREA_LOAD   = 3; // called when loading an area
+enum GEO_CONTEXT_AREA_INIT   = 4; // called when initializing the 8 areas
+enum GEO_CONTEXT_HELD_OBJ    = 5; // called when processing a GraphNodeHeldObj
 
 // The signature for a function stored in a geo node
 // The context argument depends on the callContext:
 // - for GEO_CONTEXT_CREATE it is the AllocOnlyPool from which the node was allocated
 // - for GEO_CONTEXT_RENDER or GEO_CONTEXT_HELD_OBJ it is the top of the float matrix stack with type Mat4
 // - for GEO_CONTEXT_AREA_* it is the root geo node
-alias GraphNodeFunc = Gfx* function (int callContext, GraphNode* node, void* context);
+alias GraphNodeFunc = Gfx* function (s32 callContext, GraphNode* node, void* context);
 
 /** An extension of a graph node that includes a function pointer.
  *  Many graph node types have an update function that gets called
@@ -79,24 +79,15 @@ struct FnGraphNode
  */
 struct GraphNodeRoot
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    ubyte areaIndex;
-    /*0x15*/
-    byte unk15; // ?
-    /*0x16*/
-    short x;
-    /*0x18*/
-    short y;
-    /*0x1A*/
-    short width; // half width, 160
-    /*0x1C*/
-    short height; // half height
-    /*0x1E*/
-    short numViews; // number of entries in mystery array
-    /*0x20*/
-    GraphNode** views;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ u8 areaIndex;
+    /*0x15*/ s8 unk15; // ?
+    /*0x16*/ s16 x;
+    /*0x18*/ s16 y;
+    /*0x1A*/ s16 width; // half width, 160
+    /*0x1C*/ s16 height; // half height
+    /*0x1E*/ s16 numViews; // number of entries in mystery array
+    /*0x20*/ GraphNode** views;
 }
 
 /** A node that sets up an orthographic projection based on the global
@@ -104,10 +95,8 @@ struct GraphNodeRoot
  */
 struct GraphNodeOrthoProjection
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    f32 scale;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ f32 scale;
 }
 
 /** A node that sets up a perspective projection. Used for drawing the
@@ -116,16 +105,11 @@ struct GraphNodeOrthoProjection
  */
 struct GraphNodePerspective
 {
-    /*0x00*/
-    FnGraphNode fnNode;
-    /*0x18*/
-    int unused;
-    /*0x1C*/
-    f32 fov; // horizontal field of view in degrees
-    /*0x20*/
-    short near; // near clipping plane
-    /*0x22*/
-    short far; // far clipping plane
+    /*0x00*/ FnGraphNode fnNode;
+    /*0x18*/ s32 unused;
+    /*0x1C*/ f32 fov; // horizontal field of view in degrees
+    /*0x20*/ s16 near; // near clipping plane
+    /*0x22*/ s16 far; // far clipping plane
 }
 
 /** An entry in the master list. It is a linked list of display lists
@@ -145,12 +129,9 @@ struct DisplayListNode
  */
 struct GraphNodeMasterList
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    DisplayListNode*[GFX_NUM_MASTER_LISTS] listHeads;
-    /*0x34*/
-    DisplayListNode*[GFX_NUM_MASTER_LISTS] listTails;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ DisplayListNode*[GFX_NUM_MASTER_LISTS] listHeads;
+    /*0x34*/ DisplayListNode*[GFX_NUM_MASTER_LISTS] listTails;
 }
 
 /** Simply used as a parent to group multiple children.
@@ -170,12 +151,9 @@ struct GraphNodeStart
  */
 struct GraphNodeLevelOfDetail
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    short minDistance;
-    /*0x16*/
-    short maxDistance;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ s16 minDistance;
+    /*0x16*/ s16 maxDistance;
 }
 
 /** GraphNode that renders exactly one of its children.
@@ -185,14 +163,10 @@ struct GraphNodeLevelOfDetail
  */
 struct GraphNodeSwitchCase
 {
-    /*0x00*/
-    FnGraphNode fnNode;
-    /*0x18*/
-    int unused;
-    /*0x1C*/
-    short numCases;
-    /*0x1E*/
-    short selectedCase;
+    /*0x00*/ FnGraphNode fnNode;
+    /*0x18*/ s32 unused;
+    /*0x1C*/ s16 numCases;
+    /*0x1E*/ s16 selectedCase;
 }
 
 /**
@@ -201,8 +175,7 @@ struct GraphNodeSwitchCase
  */
 struct GraphNodeCamera
 {
-    /*0x00*/
-    FnGraphNode fnNode;
+    /*0x00*/ FnGraphNode fnNode;
     /*0x18*/
     // When the node is created, a mode is assigned to the node.
     // Later in geo_camera_main a Camera is allocated,
@@ -210,22 +183,17 @@ struct GraphNodeCamera
     // by a pointer to the struct. Gotta save those 4 bytes.
     union _Anonymous_0
     {
-        int mode;
+        s32 mode;
         struct Camera;
         Camera* camera;
     }
 
     _Anonymous_0 config;
-    /*0x1C*/
-    Vec3f pos;
-    /*0x28*/
-    Vec3f focus;
-    /*0x34*/
-    Mat4* matrixPtr; // pointer to look-at matrix of this camera as a Mat4
-    /*0x38*/
-    short roll; // roll in look at matrix. Doesn't account for light direction unlike rollScreen.
-    /*0x3A*/
-    short rollScreen; // rolls screen while keeping the light direction consistent
+    /*0x1C*/ Vec3f pos;
+    /*0x28*/ Vec3f focus;
+    /*0x34*/ Mat4* matrixPtr; // pointer to look-at matrix of this camera as a Mat4
+    /*0x38*/ s16 roll; // roll in look at matrix. Doesn't account for light direction unlike rollScreen.
+    /*0x3A*/ s16 rollScreen; // rolls screen while keeping the light direction consistent
 }
 
 /** GraphNode that translates and rotates its children.
@@ -236,14 +204,10 @@ struct GraphNodeCamera
  */
 struct GraphNodeTranslationRotation
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
-    /*0x18*/
-    Vec3s translation;
-    /*0x1E*/
-    Vec3s rotation;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
+    /*0x18*/ Vec3s translation;
+    /*0x1E*/ Vec3s rotation;
 }
 
 /** GraphNode that translates itself and its children.
@@ -252,13 +216,10 @@ struct GraphNodeTranslationRotation
  */
 struct GraphNodeTranslation
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
-    /*0x18*/
-    Vec3s translation;
-    ubyte[2] pad1E;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
+    /*0x18*/ Vec3s translation;
+    u8[2] pad1E;
 }
 
 /** GraphNode that rotates itself and its children.
@@ -268,45 +229,36 @@ struct GraphNodeTranslation
  */
 struct GraphNodeRotation
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
-    /*0x18*/
-    Vec3s rotation;
-    ubyte[2] pad1E;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
+    /*0x18*/ Vec3s rotation;
+    u8[2] pad1E;
 }
 
 /** GraphNode part that transforms itself and its children based on animation
  *  data. This animation data is not stored in the node itself but in global
- *  variables that are set when object nodes are processed if the object has
+ *  variables that are set when object_ nodes are processed if the object_ has
  *  animation.
  *  Used for Mario, enemies and anything else with animation data.
  *  The display list can be null, in which case it won't draw anything itself.
  */
 struct GraphNodeAnimatedPart
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
-    /*0x18*/
-    Vec3s translation;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
+    /*0x18*/ Vec3s translation;
 }
 
 /** A GraphNode that draws a display list rotated in a way to always face the
- *  camera. Note that if the entire object is a billboard (like a coin or 1-up)
- *  then it simply sets the billboard flag for the entire object, this node is
+ *  camera. Note that if the entire object_ is a billboard (like a coin or 1-up)
+ *  then it simply sets the billboard flag for the entire object_, this node is
  *  used for billboard parts (like a chuckya or goomba body).
  */
 struct GraphNodeBillboard
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
-    /*0x18*/
-    Vec3s translation;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
+    /*0x18*/ Vec3s translation;
 }
 
 /** A GraphNode that simply draws a display list without doing any
@@ -314,56 +266,45 @@ struct GraphNodeBillboard
  */
 struct GraphNodeDisplayList
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
 }
 
 /** GraphNode part that scales itself and its children.
  *  Usage example: Mario's fist or shoe, which grows when attacking. This can't
  *  be done with an animated part sine animation data doesn't support scaling.
  *  Note that many scaling animations (like a goomba getting stomped) happen on
- *  the entire object. This node is only used when a single part needs to be scaled.
+ *  the entire object_. This node is only used when a single part needs to be scaled.
  *  There is also a level command that scales the entire level, used for THI.
  *  The display list can be null, in which case it won't draw anything itself.
  */
 struct GraphNodeScale
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    void* displayList;
-    /*0x18*/
-    f32 scale;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ void* displayList;
+    /*0x18*/ f32 scale;
 }
 
-/** GraphNode that draws a shadow under an object.
- *  Every object starts with a shadow node.
+/** GraphNode that draws a shadow under an object_.
+ *  Every object_ starts with a shadow node.
  *  The shadow type determines the shape (round or rectangular), vertices (4 or 9)
  *  and other features.
  */
 struct GraphNodeShadow
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    short shadowScale; // diameter (when a circle) or side (when a square) of shadow
-    /*0x16*/
-    ubyte shadowSolidity; // opacity of shadow, 255 = opaque
-    /*0x17*/
-    ubyte shadowType; // see ShadowType enum in shadow.h
+    /*0x00*/ GraphNode node;
+    /*0x14*/ s16 shadowScale; // diameter (when a circle) or side (when a square) of shadow
+    /*0x16*/ u8 shadowSolidity; // opacity of shadow, 255 = opaque
+    /*0x17*/ u8 shadowType; // see ShadowType enum in shadow.h
 }
 
 /** GraphNode that contains as its sharedChild a group node containing all
- *  object nodes.
+ *  object_ nodes.
  */
 struct GraphNodeObjectParent
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    GraphNode* sharedChild;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ GraphNode* sharedChild;
 }
 
 /** GraphNode that draws display lists not directly in memory but generated by
@@ -376,10 +317,8 @@ struct GraphNodeObjectParent
  */
 struct GraphNodeGenerated
 {
-    /*0x00*/
-    FnGraphNode fnNode;
-    /*0x18*/
-    uint parameter; // extra context for the function
+    /*0x00*/ FnGraphNode fnNode;
+    /*0x18*/ u32 parameter; // extra context for the function
 }
 
 /** GraphNode that draws a background image or a rectangle of a color.
@@ -387,40 +326,31 @@ struct GraphNodeGenerated
  */
 struct GraphNodeBackground
 {
-    /*0x00*/
-    FnGraphNode fnNode;
-    /*0x18*/
-    int unused;
-    /*0x1C*/
-    int background; // background ID, or rgba5551 color if fnNode.func is null
+    /*0x00*/ FnGraphNode fnNode;
+    /*0x18*/ s32 unused;
+    /*0x1C*/ s32 background; // background ID, or rgba5551 color if fnNode.func is null
 }
 
-/** Renders the object that Mario is holding.
+/** Renders the object_ that Mario is holding.
  */
 struct GraphNodeHeldObject
 {
-    /*0x00*/
-    FnGraphNode fnNode;
-    /*0x18*/
-    int playerIndex;
-    /*0x1C*/
-    Object* objNode;
-    /*0x20*/
-    Vec3s translation;
+    /*0x00*/ FnGraphNode fnNode;
+    /*0x18*/ s32 playerIndex;
+    /*0x1C*/ Object_* objNode;
+    /*0x20*/ Vec3s translation;
 }
 
-/** A node that allows an object to specify a different culling radius than the
+/** A node that allows an object_ to specify a different culling radius than the
  *  default one of 300. For this to work, it needs to be a direct child of the
- *  object node. Used for very large objects, such as shock wave rings that Bowser
+ *  object_ node. Used for very large objects, such as shock wave rings that Bowser
  *  creates, tornadoes, the big eel.
  */
 struct GraphNodeCullingRadius
 {
-    /*0x00*/
-    GraphNode node;
-    /*0x14*/
-    short cullingRadius; // specifies the 'sphere radius' for purposes of frustum culling
-    ubyte[2] pad1E;
+    /*0x00*/ GraphNode node;
+    /*0x14*/ s16 cullingRadius; // specifies the 'sphere radius' for purposes of frustum culling
+    u8[2] pad1E;
 }
 
 extern __gshared GraphNodeMasterList* gCurGraphNodeMasterList;
@@ -432,109 +362,109 @@ extern __gshared ushort gAreaUpdateCounter;
 extern __gshared GraphNode* gCurRootGraphNode;
 extern __gshared GraphNode*[] gCurGraphNodeList;
 
-extern __gshared short gCurGraphNodeIndex;
+extern __gshared s16 gCurGraphNodeIndex;
 
 extern __gshared Vec3f gVec3fZero;
 extern __gshared Vec3s gVec3sZero;
 extern __gshared Vec3f gVec3fOne;
 extern __gshared Vec3s gVec3sOne;
 
-void init_scene_graph_node_links (GraphNode* graphNode, int type);
+void init_scene_graph_node_links (GraphNode* graphNode, s32 type);
 
 GraphNodeRoot* init_graph_node_root (
     AllocOnlyPool* pool,
     GraphNodeRoot* graphNode,
-    short areaIndex,
-    short x,
-    short y,
-    short width,
-    short height);
+    s16 areaIndex,
+    s16 x,
+    s16 y,
+    s16 width,
+    s16 height);
 GraphNodeOrthoProjection* init_graph_node_ortho_projection (AllocOnlyPool* pool, GraphNodeOrthoProjection* graphNode, f32 scale);
 GraphNodePerspective* init_graph_node_perspective (
     AllocOnlyPool* pool,
     GraphNodePerspective* graphNode,
     f32 fov,
-    short near,
-    short far,
+    s16 near,
+    s16 far,
     GraphNodeFunc nodeFunc,
-    int unused);
+    s32 unused);
 GraphNodeStart* init_graph_node_start (AllocOnlyPool* pool, GraphNodeStart* graphNode);
-GraphNodeMasterList* init_graph_node_master_list (AllocOnlyPool* pool, GraphNodeMasterList* graphNode, short on);
+GraphNodeMasterList* init_graph_node_master_list (AllocOnlyPool* pool, GraphNodeMasterList* graphNode, s16 on);
 GraphNodeLevelOfDetail* init_graph_node_render_range (
     AllocOnlyPool* pool,
     GraphNodeLevelOfDetail* graphNode,
-    short minDistance,
-    short maxDistance);
+    s16 minDistance,
+    s16 maxDistance);
 GraphNodeSwitchCase* init_graph_node_switch_case (
     AllocOnlyPool* pool,
     GraphNodeSwitchCase* graphNode,
-    short numCases,
-    short selectedCase,
+    s16 numCases,
+    s16 selectedCase,
     GraphNodeFunc nodeFunc,
-    int unused);
+    s32 unused);
 GraphNodeCamera* init_graph_node_camera (
     AllocOnlyPool* pool,
     GraphNodeCamera* graphNode,
     f32* pos,
     f32* focus,
     GraphNodeFunc func,
-    int mode);
+    s32 mode);
 GraphNodeTranslationRotation* init_graph_node_translation_rotation (
     AllocOnlyPool* pool,
     GraphNodeTranslationRotation* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList,
-    Vec3s translation,
-    Vec3s rotation);
+    ref Vec3s translation,
+    ref Vec3s rotation);
 GraphNodeTranslation* init_graph_node_translation (
     AllocOnlyPool* pool,
     GraphNodeTranslation* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList,
-    Vec3s translation);
+    ref Vec3s translation);
 GraphNodeRotation* init_graph_node_rotation (
     AllocOnlyPool* pool,
     GraphNodeRotation* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList,
-    Vec3s rotation);
+    ref Vec3s rotation);
 GraphNodeScale* init_graph_node_scale (
     AllocOnlyPool* pool,
     GraphNodeScale* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList,
     f32 scale);
 GraphNodeObject* init_graph_node_object (
     AllocOnlyPool* pool,
     GraphNodeObject* graphNode,
     GraphNode* sharedChild,
-    Vec3f pos,
-    Vec3s angle,
-    Vec3f scale);
-GraphNodeCullingRadius* init_graph_node_culling_radius (AllocOnlyPool* pool, GraphNodeCullingRadius* graphNode, short radius);
+    ref Vec3f pos,
+    ref Vec3s angle,
+    ref Vec3f scale);
+GraphNodeCullingRadius* init_graph_node_culling_radius (AllocOnlyPool* pool, GraphNodeCullingRadius* graphNode, s16 radius);
 GraphNodeAnimatedPart* init_graph_node_animated_part (
     AllocOnlyPool* pool,
     GraphNodeAnimatedPart* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList,
-    Vec3s translation);
+    ref Vec3s translation);
 GraphNodeBillboard* init_graph_node_billboard (
     AllocOnlyPool* pool,
     GraphNodeBillboard* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList,
-    Vec3s translation);
+    ref Vec3s translation);
 GraphNodeDisplayList* init_graph_node_display_list (
     AllocOnlyPool* pool,
     GraphNodeDisplayList* graphNode,
-    int drawingLayer,
+    s32 drawingLayer,
     void* displayList);
 GraphNodeShadow* init_graph_node_shadow (
     AllocOnlyPool* pool,
     GraphNodeShadow* graphNode,
-    short shadowScale,
-    ubyte shadowSolidity,
-    ubyte shadowType);
+    s16 shadowScale,
+    u8 shadowSolidity,
+    u8 shadowType);
 GraphNodeObjectParent* init_graph_node_object_parent (
     AllocOnlyPool* pool,
     GraphNodeObjectParent* sp1c,
@@ -543,44 +473,44 @@ GraphNodeGenerated* init_graph_node_generated (
     AllocOnlyPool* pool,
     GraphNodeGenerated* sp1c,
     GraphNodeFunc gfxFunc,
-    int parameter);
+    s32 parameter);
 GraphNodeBackground* init_graph_node_background (
     AllocOnlyPool* pool,
     GraphNodeBackground* sp1c,
     ushort background,
     GraphNodeFunc backgroundFunc,
-    int zero);
+    s32 zero);
 GraphNodeHeldObject* init_graph_node_held_object (
     AllocOnlyPool* pool,
     GraphNodeHeldObject* sp1c,
-    Object* objNode,
-    Vec3s translation,
+    Object_* objNode,
+    ref Vec3s translation,
     GraphNodeFunc nodeFunc,
-    int playerIndex);
+    s32 playerIndex);
 GraphNode* geo_add_child (GraphNode* parent, GraphNode* childNode);
 GraphNode* geo_remove_child (GraphNode* graphNode);
 GraphNode* geo_make_first_child (GraphNode* newFirstChild);
 
-void geo_call_global_function_nodes_helper (GraphNode* graphNode, int callContext);
-void geo_call_global_function_nodes (GraphNode* graphNode, int callContext);
+void geo_call_global_function_nodes_helper (GraphNode* graphNode, s32 callContext);
+void geo_call_global_function_nodes (GraphNode* graphNode, s32 callContext);
 
 void geo_reset_object_node (GraphNodeObject* graphNode);
-void geo_obj_init (GraphNodeObject* graphNode, void* sharedChild, Vec3f pos, Vec3s angle);
+void geo_obj_init (GraphNodeObject* graphNode, void* sharedChild, ref Vec3f pos, ref Vec3s angle);
 void geo_obj_init_spawninfo (GraphNodeObject* graphNode, SpawnInfo* spawn);
 void geo_obj_init_animation (GraphNodeObject* graphNode, Animation** animPtrAddr);
-void geo_obj_init_animation_accel (GraphNodeObject* graphNode, Animation** animPtrAddr, uint animAccel);
+void geo_obj_init_animation_accel (GraphNodeObject* graphNode, Animation** animPtrAddr, u32 animAccel);
 
-int retrieve_animation_index (int frame, ushort** attributes);
+s32 retrieve_animation_index (s32 frame, ushort** attributes);
 
-short geo_update_animation_frame (AnimInfo* obj, int* accelAssist);
-void geo_retreive_animation_translation (GraphNodeObject* obj, Vec3f position);
+s16 geo_update_animation_frame (AnimInfo* obj, s32* accelAssist);
+void geo_retreive_animation_translation (GraphNodeObject* obj, ref Vec3f position);
 
 GraphNodeRoot* geo_find_root (GraphNode* graphNode);
 
 // graph_node_manager
-short* read_vec3s_to_vec3f (Vec3f, short* src);
-short* read_vec3s (Vec3s dst, short* src);
-short* read_vec3s_angle (Vec3s dst, short* src);
+s16* read_vec3s_to_vec3f (ref Vec3f, s16* src);
+s16* read_vec3s (ref Vec3s dst, s16* src);
+s16* read_vec3s_angle (ref Vec3s dst, s16* src);
 void register_scene_graph_node (GraphNode* graphNode);
 
 // GRAPH_NODE_H

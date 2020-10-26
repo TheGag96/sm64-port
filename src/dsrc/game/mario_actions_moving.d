@@ -712,7 +712,7 @@ void anim_and_audio_for_heavy_walk(MarioState* m) {
     play_step_sound(m, 26, 79);
 }
 
-void push_or_sidle_wall(MarioState* m, Vec3f startPos) {
+void push_or_sidle_wall(MarioState* m, ref Vec3f startPos) {
     import std.math;
 
     s16 wallAngle;
