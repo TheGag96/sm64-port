@@ -1,6 +1,6 @@
 module engine.math_util;
 
-import ultra64, types, gbi;
+import ultra64, types, gbi, util;
 
 extern (C):
 
@@ -16,41 +16,33 @@ extern (C):
  * exploits array sizes for range analysis-based optimizations as well).
  * Thus, for non-IDO compilers we use the standard-compliant version.
  */
-extern __gshared f32[] gSineTable;
+mixin externCArray!(f32, "gSineTable");
 
 version (SM64_Avoid_UB) {
-    extern (D) const(f32)[] gCosineTable() { return gSineTable[0..$]; }
+    extern(D) @property f32* gCosineTable() { return gSineTable + 0x400; }
 }
 else {
-    extern __gshared const(f32)[] gCosineTable;
+    mixin externCArray!(f32, "gCosineTable");
 }
 
-extern (D) auto sins(T)(auto ref T x)
-{
-    import std.math;
-    return sin(1.0 * x / 0x10000 * (2*PI));
-    //return gSineTable[cast(ushort) x >> 4];
+//can't seem to get these working by using the cosine tables...
+extern (D) f32 sins(s32 x) {
+    return gSineTable[cast(ushort) (x) >> 4];
 }
 
-extern (D) auto coss(T)(auto ref T x)
-{
-    import std.math;
-    return cos(1.0 * x / 0x10000 * (2*PI));
-    //return gCosineTable[cast(ushort) x >> 4];
+extern (D) f32 coss(s32 x) {
+    return gCosineTable[cast(ushort) (x) >> 4];
 }
 
-extern (D) auto min(T0, T1)(auto ref T0 a, auto ref T1 b)
-{
+extern (D) auto min(T0, T1)(auto ref T0 a, auto ref T1 b) {
     return a <= b ? a : b;
 }
 
-extern (D) auto max(T0, T1)(auto ref T0 a, auto ref T1 b)
-{
+extern (D) auto max(T0, T1)(auto ref T0 a, auto ref T1 b) {
     return a > b ? a : b;
 }
 
-extern (D) auto sqr(T)(auto ref T x)
-{
+extern (D) auto sqr(T)(auto ref T x) {
     return x * x;
 }
 

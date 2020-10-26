@@ -7,3 +7,8 @@ mixin template importEnumMembers(T) {
     mixin("enum T " ~ member ~ " = T. " ~ member ~ ";");
   }
 }
+
+mixin template externCArray(T, string name) {
+  mixin("pragma(mangle, name) extern(C) extern __gshared T " ~ name ~ "_base;");
+  mixin("extern(D) T* " ~ name ~ " = &" ~ name ~ "_base;");
+}
