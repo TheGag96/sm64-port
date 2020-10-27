@@ -1,6 +1,6 @@
 module game.level_update;
 
-import ultra64, types;
+import ultra64, types, util;
 
 extern (C):
 
@@ -47,62 +47,58 @@ enum MARIO_SPAWN_LAUNCH_STAR_COLLECT   = 0x24;
 enum MARIO_SPAWN_LAUNCH_DEATH          = 0x25;
 enum MARIO_SPAWN_UNKNOWN_27            = 0x27;
 
-struct CreditsEntry
-{
-    /*0x00*/ ubyte levelNum;
-    /*0x01*/ ubyte areaIndex;
-    /*0x02*/ ubyte unk02;
-    /*0x03*/ byte marioAngle;
+struct CreditsEntry {
+    /*0x00*/ u8 levelNum;
+    /*0x01*/ u8 areaIndex;
+    /*0x02*/ u8 unk02;
+    /*0x03*/ s8 marioAngle;
     /*0x04*/ Vec3s marioPos;
     /*0x0C*/ const(char*)* unk0C;
 }
 
 extern __gshared CreditsEntry* gCurrCreditsEntry;
 
-extern __gshared MarioState[] gMarioStates;
+mixin externCArray!(MarioState, "gMarioStates");
 extern __gshared MarioState* gMarioState;
 
-extern __gshared short sCurrPlayMode;
-extern __gshared ushort D_80339ECA;
-extern __gshared short sTransitionTimer;
-extern __gshared void function (short*) sTransitionUpdate;
-extern __gshared ubyte[4] unused3;
+extern __gshared s16 sCurrPlayMode;
+extern __gshared u16 D_80339ECA;
+extern __gshared s16 sTransitionTimer;
+extern __gshared void function (s16*) sTransitionUpdate;
+extern __gshared u8[4] unused3;
 
-struct WarpDest
-{
-    ubyte type;
-    ubyte levelNum;
-    ubyte areaIdx;
-    ubyte nodeId;
-    uint arg;
+struct WarpDest {
+    u8 type;
+    u8 levelNum;
+    u8 areaIdx;
+    u8 nodeId;
+    u32 arg;
 }
 
 extern __gshared WarpDest sWarpDest;
 
-extern __gshared short D_80339EE0;
-extern __gshared short sDelayedWarpOp;
-extern __gshared short sDelayedWarpTimer;
-extern __gshared short sSourceWarpNodeId;
-extern __gshared int sDelayedWarpArg;
-extern __gshared ubyte[2] unused4;
-extern __gshared byte sTimerRunning;
+extern __gshared s16 D_80339EE0;
+extern __gshared s16 sDelayedWarpOp;
+extern __gshared s16 sDelayedWarpTimer;
+extern __gshared s16 sSourceWarpNodeId;
+extern __gshared s32 sDelayedWarpArg;
+extern __gshared u8[2] unused4;
+extern __gshared s8 sTimerRunning;
 
-struct HudDisplay
-{
-    /*0x00*/ short lives;
-    /*0x02*/ short coins;
-    /*0x04*/ short stars;
-    /*0x06*/ short wedges;
-    /*0x08*/ short keys;
-    /*0x0A*/ short flags;
-    /*0x0C*/ ushort timer;
+struct HudDisplay {
+    /*0x00*/ s16 lives;
+    /*0x02*/ s16 coins;
+    /*0x04*/ s16 stars;
+    /*0x06*/ s16 wedges;
+    /*0x08*/ s16 keys;
+    /*0x0A*/ s16 flags;
+    /*0x0C*/ u16 timer;
 }
 
 extern __gshared HudDisplay gHudDisplay;
-extern __gshared byte gNeverEnteredCastle;
+extern __gshared s8 gNeverEnteredCastle;
 
-enum HUDDisplayFlag
-{
+enum HUDDisplayFlag {
     HUD_DISPLAY_FLAG_LIVES            = 0x0001,
     HUD_DISPLAY_FLAG_COIN_COUNT       = 0x0002,
     HUD_DISPLAY_FLAG_STAR_COUNT       = 0x0004,
@@ -115,17 +111,18 @@ enum HUDDisplayFlag
     HUD_DISPLAY_NONE = 0x0000,
     HUD_DISPLAY_DEFAULT = HUD_DISPLAY_FLAG_LIVES | HUD_DISPLAY_FLAG_COIN_COUNT | HUD_DISPLAY_FLAG_STAR_COUNT | HUD_DISPLAY_FLAG_CAMERA_AND_POWER | HUD_DISPLAY_FLAG_KEYS | HUD_DISPLAY_FLAG_UNKNOWN_0020
 }
+mixin importEnumMembers!HUDDisplayFlag;
 
-ushort level_control_timer (int timerOp);
-void fade_into_special_warp (uint arg, uint color);
-void load_level_init_text (uint arg);
-short level_trigger_warp (MarioState* m, int warpOp);
-void level_set_transition (short length, void function (short*) updateFunction);
+u16 level_control_timer (s32 timerOp);
+void fade_into_special_warp (u32 arg, u32 color);
+void load_level_init_text (u32 arg);
+s16 level_trigger_warp (MarioState* m, s32 warpOp);
+void level_set_transition (s16 length, void function (s16*) updateFunction);
 
-int lvl_init_or_update (short initOrUpdate, int unused);
-int lvl_init_from_save_file (short arg0, int levelNum);
-int lvl_set_current_level (short arg0, int levelNum);
-int lvl_play_the_end_screen_sound (short arg0, int arg1);
-void basic_update (short* arg);
+s32 lvl_init_or_update (s16 initOrUpdate, s32 unused);
+s32 lvl_init_from_save_file (s16 arg0, s32 levelNum);
+s32 lvl_set_current_level (s16 arg0, s32 levelNum);
+s32 lvl_play_the_end_screen_sound (s16 arg0, s32 arg1);
+void basic_update (s16* arg);
 
 // LEVEL_UPDATE_H

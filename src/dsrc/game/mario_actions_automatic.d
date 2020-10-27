@@ -758,6 +758,7 @@ s32 act_in_cannon(MarioState* m) {
                     reset_rumble_timers_2(0);
                 }
             }
+            break;
 
         default: break;
     }

@@ -374,6 +374,12 @@ else ifeq ($(VERSION),sh)
 endif
 
 ifeq ($(TARGET_N64),1)
+	DFLAGS := $(DFLAGS) --d-version=SM64_N64
+else
+	DFLAGS := $(DFLAGS) --d-version=SM64_Widescreen
+endif
+
+ifeq ($(TARGET_N64),1)
 IRIX_ROOT := tools/ido5.3_compiler
 
 ifeq ($(shell type mips-linux-gnu-ld >/dev/null 2>/dev/null; echo $$?), 0)
