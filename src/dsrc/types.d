@@ -94,8 +94,8 @@ struct Animation {
     /*0x06*/ s16 loopStart;
     /*0x08*/ s16 loopEnd;
     /*0x0A*/ s16 unusedBoneCount;
-    /*0x0C*/ const s16 *values;
-    /*0x10*/ const u16 *index;
+    /*0x0C*/ const(s16)* values;
+    /*0x10*/ const(u16)* index;
     /*0x14*/ u32 length; // only used with Mario animations to determine how much to load. 0 otherwise.
 }
 
@@ -174,7 +174,7 @@ struct Object_
             Object_*[0x50] asObject;
             Surface*[0x50] asSurface;
             void*[0x50] asVoidPtr;
-            const void*[0x50] asConstVoidPtr;
+            const(void)*[0x50] asConstVoidPtr;
         }
     } 
     _anon_1 rawData;
@@ -188,12 +188,12 @@ static if (size_t.sizeof == 8) {
         Object_*[0x50] asObject;
         Surface*[0x50] asSurface;
         void*[0x50] asVoidPtr;
-        const void*[0x50] asConstVoidPtr;
+        const(void)*[0x50] asConstVoidPtr;
     } 
     _anon_2 ptrData;
 }
     /*0x1C8*/ u32 unused1;
-    /*0x1CC*/ const BehaviorScript* curBhvCommand;
+    /*0x1CC*/ const(BehaviorScript)* curBhvCommand;
     /*0x1D0*/ u32 bhvStackIndex;
     /*0x1D4*/ uintptr_t[8] bhvStack;
     /*0x1F4*/ s16 bhvDelayTimer;
@@ -203,7 +203,7 @@ static if (size_t.sizeof == 8) {
     /*0x200*/ f32 hurtboxRadius;
     /*0x204*/ f32 hurtboxHeight;
     /*0x208*/ f32 hitboxDownOffset;
-    /*0x20C*/ const BehaviorScript* behavior;
+    /*0x20C*/ const(BehaviorScript)* behavior;
     /*0x210*/ u32 unused2;
     /*0x214*/ Object_* platform;
     /*0x218*/ void* collisionData;

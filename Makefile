@@ -376,7 +376,7 @@ endif
 ifeq ($(TARGET_N64),1)
 	DFLAGS := $(DFLAGS) --d-version=SM64_N64
 else
-	DFLAGS := $(DFLAGS) --d-version=SM64_Widescreen
+	DFLAGS := $(DFLAGS) --d-version=SM64_Widescreen --d-version=SM64_No_Segmented_Memory
 endif
 
 ifeq ($(TARGET_N64),1)

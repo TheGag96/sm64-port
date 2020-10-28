@@ -1,6 +1,6 @@
 module game.save_file;
 
-import ultra64, types, course_table, game.area;
+import ultra64, types, course_table, game.area, util;
 
 extern (C):
 
@@ -9,8 +9,8 @@ enum NUM_SAVE_FILES = 4;
 
 struct SaveBlockSignature
 {
-    ushort magic;
-    ushort chksum;
+    u16 magic;
+    u16 chksum;
 }
 
 struct SaveFile
@@ -18,18 +18,18 @@ struct SaveFile
     // Location of lost cap.
     // Note: the coordinates get set, but are never actually used, since the
     // cap can always be found in a fixed spot within the course
-    ubyte capLevel;
-    ubyte capArea;
+    u8 capLevel;
+    u8 capArea;
     Vec3s capPos;
 
-    uint flags;
+    u32 flags;
 
     // Star flags for each course.
-    // The most significant bit of the byte *following* each course is set if the
+    // The most significant bit of the s8 *following* each course is set if the
     // cannon is oaspen.
-    ubyte[COURSE_COUNT] courseStars;
+    u8[COURSE_COUNT] courseStars;
 
-    ubyte[COURSE_STAGES_COUNT] courseCoinScores;
+    u8[COURSE_STAGES_COUNT] courseCoinScores;
 
     SaveBlockSignature signature;
 }
@@ -47,11 +47,11 @@ struct MainMenuSaveData
     // Each save file has a 2 bit "age" for each course. The higher this value,
     // the older the high score is. This is used for tie-breaking when displaying
     // on the high score screen.
-    uint[NUM_SAVE_FILES] coinScoreAges;
-    ushort soundMode;
+    u32[NUM_SAVE_FILES] coinScoreAges;
+    u16 soundMode;
 
     // Pad to match the EEPROM size of 0x200 (10 bytes on JP/US, 8 bytes on EU)
-    ubyte[10] filler;
+    u8[10] filler;
 
     SaveBlockSignature signature;
 }
@@ -66,13 +66,13 @@ struct SaveBuffer
     MainMenuSaveData[2] menuData;
 }
 
-extern __gshared ubyte gLastCompletedCourseNum;
-extern __gshared ubyte gLastCompletedStarNum;
-extern __gshared byte sUnusedGotGlobalCoinHiScore;
-extern __gshared ubyte gGotFileCoinHiScore;
-extern __gshared ubyte gCurrCourseStarFlags;
-extern __gshared ubyte gSpecialTripleJump;
-extern __gshared byte[] gLevelToCourseNumTable;
+extern __gshared u8 gLastCompletedCourseNum;
+extern __gshared u8 gLastCompletedStarNum;
+extern __gshared s8 sUnusedGotGlobalCoinHiScore;
+extern __gshared u8 gGotFileCoinHiScore;
+extern __gshared u8 gCurrCourseStarFlags;
+extern __gshared u8 gSpecialTripleJump;
+mixin externCArray!(s8, "gLevelToCourseNumTable");
 
 // game progress flags
 enum SAVE_FLAG_FILE_EXISTS            = /* 0x00000001 */ (1 << 0);
@@ -117,44 +117,44 @@ extern (D) auto STAR_FLAG_TO_SAVE_FLAG(T)(auto ref T cmd)
 // possibly a WarpDest struct where arg is a union. TODO: Check?
 struct WarpCheckpoint
 {
-    /*0x00*/ ubyte actNum;
-    /*0x01*/ ubyte courseNum;
-    /*0x02*/ ubyte levelID;
-    /*0x03*/ ubyte areaNum;
-    /*0x04*/ ubyte warpNode;
+    /*0x00*/ u8 actNum;
+    /*0x01*/ u8 courseNum;
+    /*0x02*/ u8 levelID;
+    /*0x03*/ u8 areaNum;
+    /*0x04*/ u8 warpNode;
 }
 
 extern __gshared WarpCheckpoint gWarpCheckpoint;
 
-extern __gshared byte gMainMenuDataModified;
-extern __gshared byte gSaveFileModified;
+extern __gshared s8 gMainMenuDataModified;
+extern __gshared s8 gSaveFileModified;
 
-void save_file_do_save (int fileIndex);
-void save_file_erase (int fileIndex);
-int save_file_copy (int srcFileIndex, int destFileIndex);
+void save_file_do_save (s32 fileIndex);
+void save_file_erase (s32 fileIndex);
+s32 save_file_copy (s32 srcFileIndex, s32 destFileIndex);
 void save_file_load_all ();
 void save_file_reload ();
-void save_file_collect_star_or_key (short coinScore, short starIndex);
-int save_file_exists (int fileIndex);
-uint save_file_get_max_coin_score (int courseIndex);
-int save_file_get_course_star_count (int fileIndex, int courseIndex);
-int save_file_get_total_star_count (int fileIndex, int minCourse, int maxCourse);
-void save_file_set_flags (uint flags);
-void save_file_clear_flags (uint flags);
-uint save_file_get_flags ();
-uint save_file_get_star_flags (int fileIndex, int courseIndex);
-void save_file_set_star_flags (int fileIndex, int courseIndex, uint starFlags);
-int save_file_get_course_coin_score (int fileIndex, int courseIndex);
-int save_file_is_cannon_unlocked ();
+void save_file_collect_star_or_key (s16 coinScore, s16 starIndex);
+s32 save_file_exists (s32 fileIndex);
+u32 save_file_get_max_coin_score (s32 courseIndex);
+s32 save_file_get_course_star_count (s32 fileIndex, s32 courseIndex);
+s32 save_file_get_total_star_count (s32 fileIndex, s32 minCourse, s32 maxCourse);
+void save_file_set_flags (u32 flags);
+void save_file_clear_flags (u32 flags);
+u32 save_file_get_flags ();
+u32 save_file_get_star_flags (s32 fileIndex, s32 courseIndex);
+void save_file_set_star_flags (s32 fileIndex, s32 courseIndex, u32 starFlags);
+s32 save_file_get_course_coin_score (s32 fileIndex, s32 courseIndex);
+s32 save_file_is_cannon_unlocked ();
 void save_file_set_cannon_unlocked ();
-void save_file_set_cap_pos (short x, short y, short z);
-int save_file_get_cap_pos (ref Vec3s capPos);
-void save_file_set_sound_mode (ushort mode);
-ushort save_file_get_sound_mode ();
+void save_file_set_cap_pos (s16 x, s16 y, s16 z);
+s32 save_file_get_cap_pos (ref Vec3s capPos);
+void save_file_set_sound_mode (u16 mode);
+u16 save_file_get_sound_mode ();
 void save_file_move_cap_to_default_location ();
 
 void disable_warp_checkpoint ();
 void check_if_should_set_warp_checkpoint (WarpNode* warpNode);
-int check_warp_checkpoint (WarpNode* warpNode);
+s32 check_warp_checkpoint (WarpNode* warpNode);
 
 // SAVE_FILE_H

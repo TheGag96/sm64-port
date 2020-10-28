@@ -1,6 +1,6 @@
 module engine.graph_node;
 
-import ultra64, types, game.memory, game.area, gbi;
+import ultra64, types, game.memory, game.area, gbi, util;
 
 import core.stdc.stdint;
 
@@ -360,7 +360,7 @@ extern __gshared GraphNodeHeldObject* gCurGraphNodeHeldObject;
 extern __gshared ushort gAreaUpdateCounter;
 
 extern __gshared GraphNode* gCurRootGraphNode;
-extern __gshared GraphNode*[] gCurGraphNodeList;
+mixin externCArray!(GraphNode*, "gCurGraphNodeList");
 
 extern __gshared s16 gCurGraphNodeIndex;
 

@@ -1,6 +1,6 @@
 module game.game_init;
 
-import ultra64, types, gbi, game.memory;
+import ultra64, types, gbi, game.memory, util;
 
 import core.stdc.stdint;
 
@@ -56,8 +56,8 @@ extern __gshared DemoInput gRecordedDemoInput;
 extern __gshared MarioAnimation D_80339D10;
 extern __gshared MarioAnimation gDemo;
 
-extern __gshared ubyte[] gMarioAnims;
-extern __gshared ubyte[] gDemoInputs;
+mixin externCArray!(ubyte, "gMarioAnims");
+mixin externCArray!(ubyte, "gDemoInputs");
 
 extern __gshared ushort frameBufferIndex;
 extern __gshared uint gGlobalTimer;
