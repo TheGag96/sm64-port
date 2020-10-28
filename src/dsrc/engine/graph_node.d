@@ -1,6 +1,6 @@
 module engine.graph_node;
 
-import ultra64, types, game.memory, game.area, gbi, util;
+import ultra64, types, game.memory, game.area, game.camera, gbi, util;
 
 import core.stdc.stdint;
 
@@ -184,7 +184,6 @@ struct GraphNodeCamera
     union _Anonymous_0
     {
         s32 mode;
-        struct Camera;
         Camera* camera;
     }
 

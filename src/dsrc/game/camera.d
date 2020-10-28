@@ -304,24 +304,17 @@ struct PlayerCameraState
     /**
      * Mario's action on this frame.
      */
-    /*0x00*/
-    uint action;
-    /*0x04*/
-    Vec3f pos;
-    /*0x10*/
-    Vec3s faceAngle;
-    /*0x16*/
-    Vec3s headRotation;
-    /*0x1C*/
-    short unused;
+    /*0x00*/ uint action;
+    /*0x04*/ Vec3f pos;
+    /*0x10*/ Vec3s faceAngle;
+    /*0x16*/ Vec3s headRotation;
+    /*0x1C*/ s16 unused;
     /**
      * Set to nonzero when an event, such as entering a door, starting the credits, or throwing bowser,
      * has happened on this frame.
      */
-    /*0x1E*/
-    short cameraEvent;
-    /*0x20*/
-    Object_* usedObj;
+    /*0x1E*/ s16 cameraEvent;
+    /*0x20*/ Object_* usedObj;
 }
 
 /**
@@ -330,24 +323,15 @@ struct PlayerCameraState
  */
 struct TransitionInfo
 {
-    /*0x00*/
-    short posPitch;
-    /*0x02*/
-    short posYaw;
-    /*0x04*/
-    f32 posDist;
-    /*0x08*/
-    short focPitch;
-    /*0x0A*/
-    short focYaw;
-    /*0x0C*/
-    f32 focDist;
-    /*0x10*/
-    int framesLeft;
-    /*0x14*/
-    Vec3f marioPos;
-    /*0x20*/
-    ubyte pad; // for the structs to align, there has to be an extra unused variable here. type is unknown.
+    /*0x00*/ s16 posPitch;
+    /*0x02*/ s16 posYaw;
+    /*0x04*/ f32 posDist;
+    /*0x08*/ s16 focPitch;
+    /*0x0A*/ s16 focYaw;
+    /*0x0C*/ f32 focDist;
+    /*0x10*/ int framesLeft;
+    /*0x14*/ Vec3f marioPos;
+    /*0x20*/ u8 pad; // for the structs to align, there has to be an extra unused variable here. type is unknown.
 }
 
 /**
@@ -356,12 +340,9 @@ struct TransitionInfo
  */
 struct HandheldShakePoint
 {
-    /*0x00*/
-    byte index; // only set to -1
-    /*0x04 (aligned)*/
-    uint pad;
-    /*0x08*/
-    Vec3s point;
+    /*0x00*/ byte index; // only set to -1
+    /*0x04 (aligned)*/ uint pad;
+    /*0x08*/ Vec3s point;
 } // size = 0x10
 
 // These are the same type, but the name that is used depends on context.
@@ -395,16 +376,16 @@ struct CameraTrigger
     /// A function that gets called while Mario is in the trigger bounds
     CameraEvent event;
     // The (x,y,z) position of the center of the bounding box
-    short centerX;
-    short centerY;
-    short centerZ;
+    s16 centerX;
+    s16 centerY;
+    s16 centerZ;
     // The max displacement in x, y, and z from the center for a point to be considered inside the
     // bounding box
-    short boundsX;
-    short boundsY;
-    short boundsZ;
+    s16 boundsX;
+    s16 boundsY;
+    s16 boundsZ;
     /// This angle rotates Mario's offset from the box's origin, before it is checked for being inside.
-    short boundsYaw;
+    s16 boundsYaw;
 }
 
 /**
@@ -416,7 +397,7 @@ struct Cutscene
     /// The function that gets called.
     CutsceneShot shot;
     /// How long the shot lasts.
-    short duration;
+    s16 duration;
 }
 
 /**
@@ -425,32 +406,24 @@ struct Cutscene
 struct CameraFOVStatus
 {
     /// The current function being used to set the camera's field of view (before any fov shake is applied).
-    /*0x00*/
-    ubyte fovFunc;
+    /*0x00*/ u8 fovFunc;
     /// The current field of view in degrees
-    /*0x04*/
-    f32 fov;
+    /*0x04*/ f32 fov;
 
     // Fields used by shake_camera_fov()
 
     /// The amount to change the current fov by in the fov shake effect.
-    /*0x08*/
-    f32 fovOffset;
+    /*0x08*/ f32 fovOffset;
     /// A bool set in fov_default() but unused otherwise
-    /*0x0C*/
-    uint unusedIsSleeping;
+    /*0x0C*/ uint unusedIsSleeping;
     /// The range in degrees to shake fov
-    /*0x10*/
-    f32 shakeAmplitude;
+    /*0x10*/ f32 shakeAmplitude;
     /// Used to calculate fovOffset, the phase through the shake's period.
-    /*0x14*/
-    short shakePhase;
+    /*0x14*/ s16 shakePhase;
     /// How much to progress through the shake period
-    /*0x16*/
-    short shakeSpeed;
+    /*0x16*/ s16 shakeSpeed;
     /// How much to decrease shakeAmplitude each frame.
-    /*0x18*/
-    short decay;
+    /*0x18*/ s16 decay;
 }
 
 /**
@@ -463,7 +436,7 @@ struct CutsceneSplinePoint
     byte index;
     /* Roughly controls the number of frames it takes to progress through the spline segment.
        See move_point_along_spline() in camera.c */
-    ubyte speed;
+    u8 speed;
     Vec3s point;
 }
 
@@ -473,33 +446,20 @@ struct CutsceneSplinePoint
  */
 struct PlayerGeometry
 {
-    /*0x00*/
-    Surface* currFloor;
-    /*0x04*/
-    f32 currFloorHeight;
-    /*0x08*/
-    short currFloorType;
-    /*0x0C*/
-    Surface* currCeil;
-    /*0x10*/
-    short currCeilType;
-    /*0x14*/
-    f32 currCeilHeight;
-    /*0x18*/
-    Surface* prevFloor;
-    /*0x1C*/
-    f32 prevFloorHeight;
-    /*0x20*/
-    short prevFloorType;
-    /*0x24*/
-    Surface* prevCeil;
-    /*0x28*/
-    f32 prevCeilHeight;
-    /*0x2C*/
-    short prevCeilType;
+    /*0x00*/ Surface* currFloor;
+    /*0x04*/ f32 currFloorHeight;
+    /*0x08*/ s16 currFloorType;
+    /*0x0C*/ Surface* currCeil;
+    /*0x10*/ s16 currCeilType;
+    /*0x14*/ f32 currCeilHeight;
+    /*0x18*/ Surface* prevFloor;
+    /*0x1C*/ f32 prevFloorHeight;
+    /*0x20*/ s16 prevFloorType;
+    /*0x24*/ Surface* prevCeil;
+    /*0x28*/ f32 prevCeilHeight;
+    /*0x2C*/ s16 prevCeilType;
     /// Unused, but recalculated every frame
-    /*0x30*/
-    f32 waterHeight;
+    /*0x30*/ f32 waterHeight;
 }
 
 /**
@@ -510,8 +470,8 @@ struct LinearTransitionPoint
     Vec3f focus;
     Vec3f pos;
     f32 dist;
-    short pitch;
-    short yaw;
+    s16 pitch;
+    s16 yaw;
 }
 
 /**
@@ -519,10 +479,10 @@ struct LinearTransitionPoint
  */
 struct ModeTransitionInfo
 {
-    short newMode;
-    short lastMode;
-    short max;
-    short frame;
+    s16 newMode;
+    s16 lastMode;
+    s16 max;
+    s16 frame;
     LinearTransitionPoint transitionStart;
     LinearTransitionPoint transitionEnd;
 }
@@ -533,7 +493,7 @@ struct ModeTransitionInfo
 struct ParallelTrackingPoint
 {
     /// Whether this point is the start of a path
-    short startOfPath;
+    s16 startOfPath;
     /// Point used to define a line segment to follow
     Vec3f pos;
     /// The distance Mario can move along the line before the camera should move
@@ -547,14 +507,10 @@ struct ParallelTrackingPoint
  */
 struct CameraStoredInfo
 {
-    /*0x00*/
-    Vec3f pos;
-    /*0x0C*/
-    Vec3f focus;
-    /*0x18*/
-    f32 panDist;
-    /*0x1C*/
-    f32 cannonYOffset;
+    /*0x00*/ Vec3f pos;
+    /*0x0C*/ Vec3f focus;
+    /*0x18*/ f32 panDist;
+    /*0x1C*/ f32 cannonYOffset;
 }
 
 /**
@@ -570,7 +526,7 @@ struct CutsceneVariable
     Vec3f unusedPoint;
     Vec3s angle;
     /// Perhaps a boolean or an extra angle
-    short unused2;
+    s16 unused2;
 }
 
 /**
@@ -580,10 +536,8 @@ struct CutsceneVariable
  */
 struct Camera
 {
-    /*0x00*/
-    ubyte mode; // What type of mode the camera uses (see defines above)
-    /*0x01*/
-    ubyte defMode;
+    /*0x00*/ u8 mode; // What type of mode the camera uses (see defines above)
+    /*0x01*/ u8 defMode;
     /**
      * Determines what direction Mario moves in when the analog stick is moved.
      *
@@ -592,36 +546,24 @@ struct Camera
      *          be. It's effectively the opposite of the camera's actual yaw. Use
      *          vec3f_get_dist_and_angle() if you need the camera's yaw.
      */
-    /*0x02*/
-    short yaw;
-    /*0x04*/
-    Vec3f focus;
-    /*0x10*/
-    Vec3f pos;
-    /*0x1C*/
-    Vec3f unusedVec1;
+    /*0x02*/ s16 yaw;
+    /*0x04*/ Vec3f focus;
+    /*0x10*/ Vec3f pos;
+    /*0x1C*/ Vec3f unusedVec1;
     /// The x coordinate of the "center" of the area. The camera will rotate around this point.
     /// For example, this is what makes the camera rotate around the hill in BoB
-    /*0x28*/
-    f32 areaCenX;
+    /*0x28*/ f32 areaCenX;
     /// The z coordinate of the "center" of the area. The camera will rotate around this point.
     /// For example, this is what makes the camera rotate around the hill in BoB
-    /*0x2C*/
-    f32 areaCenZ;
-    /*0x30*/
-    ubyte cutscene;
-    /*0x31*/
-    ubyte[0x8] filler31;
-    /*0x3A*/
-    short nextYaw;
-    /*0x3C*/
-    ubyte[0x28] filler3C;
-    /*0x64*/
-    ubyte doorStatus;
+    /*0x2C*/ f32 areaCenZ;
+    /*0x30*/ u8 cutscene;
+    /*0x31*/ u8[0x8] filler31;
+    /*0x3A*/ s16 nextYaw;
+    /*0x3C*/ u8[0x28] filler3C;
+    /*0x64*/ u8 doorStatus;
     /// The y coordinate of the "center" of the area. Unlike areaCenX and areaCenZ, this is only used
     /// when paused. See zoom_out_if_paused_and_outside
-    /*0x68*/
-    f32 areaCenY;
+    /*0x68*/ f32 areaCenY;
 }
 
 /**
@@ -637,148 +579,111 @@ struct LakituState
     /**
      * Lakitu's position, which (when CAM_FLAG_SMOOTH_MOVEMENT is set), approaches his goalPos every frame.
      */
-    /*0x00*/
-    Vec3f curFocus;
+    /*0x00*/ Vec3f curFocus;
     /**
      * Lakitu's focus, which (when CAM_FLAG_SMOOTH_MOVEMENT is set), approaches his goalFocus every frame.
      */
-    /*0x0C*/
-    Vec3f curPos;
+    /*0x0C*/ Vec3f curPos;
     /**
      * The focus point that lakitu turns towards every frame.
      * If CAM_FLAG_SMOOTH_MOVEMENT is unset, this is the same as curFocus.
      */
-    /*0x18*/
-    Vec3f goalFocus;
+    /*0x18*/ Vec3f goalFocus;
     /**
      * The point that lakitu flies towards every frame.
      * If CAM_FLAG_SMOOTH_MOVEMENT is unset, this is the same as curPos.
      */
-    /*0x24*/
-    Vec3f goalPos;
+    /*0x24*/ Vec3f goalPos;
 
-    /*0x30*/
-    ubyte[12] filler30; // extra unused Vec3f?
+    /*0x30*/ u8[12] filler30; // extra unused Vec3f?
 
     /// Copy of the active camera mode
-    /*0x3C*/
-    ubyte mode;
+    /*0x3C*/ u8 mode;
     /// Copy of the default camera mode
-    /*0x3D*/
-    ubyte defMode;
+    /*0x3D*/ u8 defMode;
 
-    /*0x3E*/
-    ubyte[10] filler3E;
+    /*0x3E*/ u8[10] filler3E;
 
-    /*0x48*/
-    f32 focusDistance; // unused
-    /*0x4C*/
-    short oldPitch; // unused
-    /*0x4E*/
-    short oldYaw; // unused
-    /*0x50*/
-    short oldRoll; // unused
+    /*0x48*/ f32 focusDistance; // unused
+    /*0x4C*/ s16 oldPitch; // unused
+    /*0x4E*/ s16 oldYaw; // unused
+    /*0x50*/ s16 oldRoll; // unused
 
     /// The angular offsets added to lakitu's pitch, yaw, and roll
-    /*0x52*/
-    Vec3s shakeMagnitude;
+    /*0x52*/ Vec3s shakeMagnitude;
 
     // shake pitch, yaw, and roll phase: The progression through the camera shake (a cosine wave).
     // shake pitch, yaw, and roll vel: The speed of the camera shake.
     // shake pitch, yaw, and roll decay: The shake's deceleration.
-    /*0x58*/
-    short shakePitchPhase;
-    /*0x5A*/
-    short shakePitchVel;
-    /*0x5C*/
-    short shakePitchDecay;
+    /*0x58*/ s16 shakePitchPhase;
+    /*0x5A*/ s16 shakePitchVel;
+    /*0x5C*/ s16 shakePitchDecay;
 
-    /*0x60*/
-    Vec3f unusedVec1;
-    /*0x6C*/
-    Vec3s unusedVec2;
-    /*0x72*/
-    ubyte[8] filler72;
+    /*0x60*/ Vec3f unusedVec1;
+    /*0x6C*/ Vec3s unusedVec2;
+    /*0x72*/ u8[8] filler72;
 
     /// Used to rotate the screen when rendering.
-    /*0x7A*/
-    short roll;
+    /*0x7A*/ s16 roll;
     /// Copy of the camera's yaw.
-    /*0x7C*/
-    short yaw;
+    /*0x7C*/ s16 yaw;
     /// Copy of the camera's next yaw.
-    /*0x7E*/
-    short nextYaw;
+    /*0x7E*/ s16 nextYaw;
     /// The actual focus point the game uses to render.
-    /*0x80*/
-    Vec3f focus;
+    /*0x80*/ Vec3f focus;
     /// The actual position the game is rendered from.
-    /*0x8C*/
-    Vec3f pos;
+    /*0x8C*/ Vec3f pos;
 
     // Shake variables: See above description
-    /*0x98*/
-    short shakeRollPhase;
-    /*0x9A*/
-    short shakeRollVel;
-    /*0x9C*/
-    short shakeRollDecay;
-    /*0x9E*/
-    short shakeYawPhase;
-    /*0xA0*/
-    short shakeYawVel;
-    /*0xA2*/
-    short shakeYawDecay;
+    /*0x98*/ s16 shakeRollPhase;
+    /*0x9A*/ s16 shakeRollVel;
+    /*0x9C*/ s16 shakeRollDecay;
+    /*0x9E*/ s16 shakeYawPhase;
+    /*0xA0*/ s16 shakeYawVel;
+    /*0xA2*/ s16 shakeYawDecay;
 
     // focH,Vspeed: how fast lakitu turns towards his goalFocus.
     /// By default HSpeed is 0.8, so lakitu turns 80% of the horz distance to his goal each frame.
-    /*0xA4*/
-    f32 focHSpeed;
+    /*0xA4*/ f32 focHSpeed;
     /// By default VSpeed is 0.3, so lakitu turns 30% of the vert distance to his goal each frame.
-    /*0xA8*/
-    f32 focVSpeed;
+    /*0xA8*/ f32 focVSpeed;
 
     // posH,Vspeed: How fast lakitu flies towards his goalPos.
     /// By default they are 0.3, so lakitu will fly 30% of the way towards his goal each frame.
-    /*0xAC*/
-    f32 posHSpeed;
-    /*0xB0*/
-    f32 posVSpeed;
+    /*0xAC*/ f32 posHSpeed;
+    /*0xB0*/ f32 posVSpeed;
 
     /// The roll offset applied during part of the key dance cutscene
-    /*0xB4*/
-    short keyDanceRoll;
+    /*0xB4*/ s16 keyDanceRoll;
     /// Mario's action from the previous frame. Only used to determine if Mario just finished a dive.
-    /*0xB8*/
-    uint lastFrameAction;
-    /*0xBC*/
-    short unused;
+    /*0xB8*/ uint lastFrameAction;
+    /*0xBC*/ s16 unused;
 }
 
 // bss order hack to not affect BSS order. if possible, remove me, but it will be hard to match otherwise
 
 // BSS
-extern __gshared short sSelectionFlags;
-extern __gshared short sCameraSoundFlags;
-extern __gshared ushort sCButtonsPressed;
+extern __gshared s16 sSelectionFlags;
+extern __gshared s16 sCameraSoundFlags;
+extern __gshared u16 sCButtonsPressed;
 extern __gshared PlayerCameraState[2] gPlayerCameraState;
 extern __gshared LakituState gLakituState;
-extern __gshared short gCameraMovementFlags;
+extern __gshared s16 gCameraMovementFlags;
 extern __gshared int gObjCutsceneDone;
 extern __gshared Camera* gCamera;
 
 extern __gshared Object_* gCutsceneFocus;
 extern __gshared Object_* gSecondCameraFocus;
-extern __gshared ubyte gRecentCutscene;
+extern __gshared u8 gRecentCutscene;
 
 // TODO: sort all of this extremely messy shit out after the split
 
-void set_camera_shake_from_hit (short shake);
-void set_environmental_camera_shake (short shake);
-void set_camera_shake_from_point (short shake, f32 posX, f32 posY, f32 posZ);
+void set_camera_shake_from_hit (s16 shake);
+void set_environmental_camera_shake (s16 shake);
+void set_camera_shake_from_point (s16 shake, f32 posX, f32 posY, f32 posZ);
 void move_mario_head_c_up (Camera* c);
-void transition_next_state (Camera* c, short frames);
-void set_camera_mode (Camera* c, short mode, short frames);
+void transition_next_state (Camera* c, s16 frames);
+void set_camera_mode (Camera* c, s16 mode, s16 frames);
 void update_camera (Camera* c);
 void reset_camera (Camera* c);
 void init_camera (Camera* c);
@@ -789,46 +694,46 @@ void stub_camera_3 (Camera* c);
 void vec3f_sub (ref Vec3f dst, ref Vec3f src);
 void object_pos_to_vec3f (ref Vec3f dst, Object_* o);
 void vec3f_to_object_pos (Object_* o, ref Vec3f src);
-int move_point_along_spline (ref Vec3f p, CutsceneSplinePoint* spline, short* splineSegment, f32* progress);
+int move_point_along_spline (ref Vec3f p, CutsceneSplinePoint* spline, s16* splineSegment, f32* progress);
 int cam_select_alt_mode (int angle);
 int set_cam_angle (int mode);
-void set_handheld_shake (ubyte mode);
+void set_handheld_shake (u8 mode);
 void shake_camera_handheld (ref Vec3f pos, ref Vec3f focus);
-int find_c_buttons_pressed (ushort currentState, ushort buttonsPressed, ushort buttonsDown);
+int find_c_buttons_pressed (u16 currentState, u16 buttonsPressed, u16 buttonsDown);
 int update_camera_hud_status (Camera* c);
 int collide_with_walls (ref Vec3f pos, f32 offsetY, f32 radius);
-int clamp_pitch (ref Vec3f from, ref Vec3f to, short maxPitch, short minPitch);
+int clamp_pitch (ref Vec3f from, ref Vec3f to, s16 maxPitch, s16 minPitch);
 int is_within_100_units_of_mario (f32 posX, f32 posY, f32 posZ);
 int set_or_approach_f32_asymptotic (f32* dst, f32 goal, f32 scale);
 int approach_f32_asymptotic_bool (f32* current, f32 target, f32 multiplier);
 f32 approach_f32_asymptotic (f32 current, f32 target, f32 multiplier);
-int approach_s16_asymptotic_bool (short* current, short target, short divisor);
-int approach_s16_asymptotic (short current, short target, short divisor);
+int approach_s16_asymptotic_bool (s16* current, s16 target, s16 divisor);
+int approach_s16_asymptotic (s16 current, s16 target, s16 divisor);
 void approach_vec3f_asymptotic (ref Vec3f current, ref Vec3f target, f32 xMul, f32 yMul, f32 zMul);
 void set_or_approach_vec3f_asymptotic (ref Vec3f dst, ref Vec3f goal, f32 xMul, f32 yMul, f32 zMul);
-int camera_approach_s16_symmetric_bool (short* current, short target, short increment);
-int set_or_approach_s16_symmetric (short* current, short target, short increment);
+int camera_approach_s16_symmetric_bool (s16* current, s16 target, s16 increment);
+int set_or_approach_s16_symmetric (s16* current, s16 target, s16 increment);
 int camera_approach_f32_symmetric_bool (f32* current, f32 target, f32 increment);
 f32 camera_approach_f32_symmetric (f32 value, f32 target, f32 increment);
-void random_vec3s (ref Vec3s dst, short xRange, short yRange, short zRange);
+void random_vec3s (ref Vec3s dst, s16 xRange, s16 yRange, s16 zRange);
 int clamp_positions_and_find_yaw (ref Vec3f pos, ref Vec3f origin, f32 xMax, f32 xMin, f32 zMax, f32 zMin);
-int is_range_behind_surface (ref Vec3f from, ref Vec3f to, Surface* surf, short range, short surfType);
+int is_range_behind_surface (ref Vec3f from, ref Vec3f to, Surface* surf, s16 range, s16 surfType);
 void scale_along_line (ref Vec3f dest, ref Vec3f from, ref Vec3f to, f32 scale);
-short calculate_pitch (ref Vec3f from, ref Vec3f to);
-short calculate_yaw (ref Vec3f from, ref Vec3f to);
-void calculate_angles (ref Vec3f from, ref Vec3f to, short* pitch, short* yaw);
+s16 calculate_pitch (ref Vec3f from, ref Vec3f to);
+s16 calculate_yaw (ref Vec3f from, ref Vec3f to);
+void calculate_angles (ref Vec3f from, ref Vec3f to, s16* pitch, s16* yaw);
 f32 calc_abs_dist (ref Vec3f a, ref Vec3f b);
 f32 calc_hor_dist (ref Vec3f a, ref Vec3f b);
-void rotate_in_xz (ref Vec3f dst, ref Vec3f src, short yaw);
-void rotate_in_yz (ref Vec3f dst, ref Vec3f src, short pitch);
-void set_camera_pitch_shake (short mag, short decay, short inc);
-void set_camera_yaw_shake (short mag, short decay, short inc);
-void set_camera_roll_shake (short mag, short decay, short inc);
-void set_pitch_shake_from_point (short mag, short decay, short inc, f32 maxDist, f32 posX, f32 posY, f32 posZ);
+void rotate_in_xz (ref Vec3f dst, ref Vec3f src, s16 yaw);
+void rotate_in_yz (ref Vec3f dst, ref Vec3f src, s16 pitch);
+void set_camera_pitch_shake (s16 mag, s16 decay, s16 inc);
+void set_camera_yaw_shake (s16 mag, s16 decay, s16 inc);
+void set_camera_roll_shake (s16 mag, s16 decay, s16 inc);
+void set_pitch_shake_from_point (s16 mag, s16 decay, s16 inc, f32 maxDist, f32 posX, f32 posY, f32 posZ);
 void shake_camera_pitch (ref Vec3f pos, ref Vec3f focus);
 void shake_camera_yaw (ref Vec3f pos, ref Vec3f focus);
-void shake_camera_roll (short* roll);
-int offset_yaw_outward_radial (Camera* c, short areaYaw);
+void shake_camera_roll (s16* roll);
+int offset_yaw_outward_radial (Camera* c, s16 areaYaw);
 void play_camera_buzz_if_cdown ();
 void play_camera_buzz_if_cbutton ();
 void play_camera_buzz_if_c_sideways ();
@@ -841,30 +746,30 @@ void play_sound_if_cam_switched_to_lakitu_or_mario ();
 int radial_camera_input (Camera* c, f32 unused);
 int trigger_cutscene_dialog (int trigger);
 void handle_c_button_movement (Camera* c);
-void start_cutscene (Camera* c, ubyte cutscene);
-ubyte get_cutscene_from_mario_status (Camera* c);
+void start_cutscene (Camera* c, u8 cutscene);
+u8 get_cutscene_from_mario_status (Camera* c);
 void warp_camera (f32 displacementX, f32 displacementY, f32 displacementZ);
 void approach_camera_height (Camera* c, f32 goal, f32 inc);
 void offset_rotated (ref Vec3f dst, ref Vec3f from, ref Vec3f to, ref Vec3s rotation);
-short next_lakitu_state (ref Vec3f newPos, ref Vec3f newFoc, ref Vec3f curPos, ref Vec3f curFoc, ref Vec3f oldPos, ref Vec3f oldFoc, short yaw);
-void set_fixed_cam_axis_sa_lobby (short preset);
-short camera_course_processing (Camera* c);
+s16 next_lakitu_state (ref Vec3f newPos, ref Vec3f newFoc, ref Vec3f curPos, ref Vec3f curFoc, ref Vec3f oldPos, ref Vec3f oldFoc, s16 yaw);
+void set_fixed_cam_axis_sa_lobby (s16 preset);
+s16 camera_course_processing (Camera* c);
 void resolve_geometry_collisions (ref Vec3f pos, ref Vec3f lastGood);
-int rotate_camera_around_walls (Camera* c, ref Vec3f cPos, short* avoidYaw, short yawRange);
+int rotate_camera_around_walls (Camera* c, ref Vec3f cPos, s16* avoidYaw, s16 yawRange);
 void find_mario_floor_and_ceil (PlayerGeometry* pg);
-ubyte start_object_cutscene_without_focus (ubyte cutscene);
-short cutscene_object_with_dialog (ubyte cutscene, Object_* o, short dialogID);
-short cutscene_object_without_dialog (ubyte cutscene, Object_* o);
-short cutscene_object (ubyte cutscene, Object_* o);
+u8 start_object_cutscene_without_focus (u8 cutscene);
+s16 cutscene_object_with_dialog (u8 cutscene, Object_* o, s16 dialogID);
+s16 cutscene_object_without_dialog (u8 cutscene, Object_* o);
+s16 cutscene_object (u8 cutscene, Object_* o);
 void play_cutscene (Camera* c);
-int cutscene_event (CameraEvent event, Camera* c, short start, short end);
-int cutscene_spawn_obj (uint obj, short frame);
-void set_fov_shake (short amplitude, short decay, short shakeSpeed);
+int cutscene_event (CameraEvent event, Camera* c, s16 start, s16 end);
+int cutscene_spawn_obj (uint obj, s16 frame);
+void set_fov_shake (s16 amplitude, s16 decay, s16 shakeSpeed);
 
-void set_fov_function (ubyte func);
-void cutscene_set_fov_shake_preset (ubyte preset);
-void set_fov_shake_from_point_preset (ubyte preset, f32 posX, f32 posY, f32 posZ);
-void obj_rotate_towards_point (Object_* o, ref Vec3f point, short pitchOff, short yawOff, short pitchDiv, short yawDiv);
+void set_fov_function (u8 func);
+void cutscene_set_fov_shake_preset (u8 preset);
+void set_fov_shake_from_point_preset (u8 preset, f32 posX, f32 posY, f32 posZ);
+void obj_rotate_towards_point (Object_* o, ref Vec3f point, s16 pitchOff, s16 yawOff, s16 pitchDiv, s16 yawDiv);
 
 Gfx* geo_camera_fov (int callContext, GraphNode* g, void* context);
 

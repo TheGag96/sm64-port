@@ -1970,8 +1970,8 @@ s32 act_jumbo_star_cutscene(MarioState* m) {
 }
 
 void generate_yellow_sparkles(s16 x, s16 y, s16 z, f32 radius) {
-    s32 sSparkleGenTheta = 0;
-    s32 sSparkleGenPhi = 0;
+    static s32 sSparkleGenTheta = 0;
+    static s32 sSparkleGenPhi = 0;
 
     s16 offsetX = cast(s16) (radius * coss(sSparkleGenTheta) * sins(sSparkleGenPhi));
     s16 offsetY = cast(s16) (radius * sins(sSparkleGenTheta));

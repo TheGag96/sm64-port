@@ -1,7 +1,5 @@
 module gbi;
 
-import ultra64;
-
 /**************************************************************************
  *									  *
  *		 Copyright (C) 1994, Silicon Graphics, Inc.		  *
@@ -20,6 +18,10 @@ import ultra64;
  *  $Source: /exdisk2/cvs/N64OS/Master/cvsmdev2/PR/include/gbi.h,v $
  *
  **************************************************************************/
+
+import ultra64, mbi;
+import core.stdc.config;
+import core.stdc.stdint;
 
 extern (C):
 
@@ -88,46 +90,55 @@ extern (C):
  *
  */
 
+enum G_NOOP = 0x00;
+enum G_RDPHALF_2 = 0xf1;
+enum G_SETOTHERMODE_H = 0xe3;
+enum G_SETOTHERMODE_L = 0xe2;
+enum G_RDPHALF_1 = 0xe1;
+enum G_SPNOOP = 0xe0;
+enum G_ENDDL = 0xdf;
+enum G_DL = 0xde;
+enum G_LOAD_UCODE = 0xdd;
+enum G_MOVEMEM = 0xdc;
+enum G_MOVEWORD = 0xdb;
+enum G_MTX = 0xda;
+enum G_GEOMETRYMODE = 0xd9;
+enum G_POPMTX = 0xd8;
+enum G_TEXTURE = 0xd7;
+enum G_DMA_IO = 0xd6;
+enum G_SPECIAL_1 = 0xd5;
+enum G_SPECIAL_2 = 0xd4;
+enum G_SPECIAL_3 = 0xd3;
+
+enum G_VTX = 0x01;
+enum G_MODIFYVTX = 0x02;
+enum G_CULLDL = 0x03;
+enum G_BRANCH_Z = 0x04;
+enum G_TRI1 = 0x05;
+enum G_TRI2 = 0x06;
+enum G_QUAD = 0x07;
+enum G_LINE3D = 0x08;
 /* F3DEX_GBI_2 */
 
 /* DMA commands: */
-enum G_SPNOOP = 0; /* handle 0 gracefully */
-enum G_MTX = 1;
-enum G_RESERVED0 = 2; /* not implemeted */
-enum G_MOVEMEM = 3; /* move a block of memory (up to 4 words) to dmem */
-enum G_VTX = 4;
-enum G_RESERVED1 = 5; /* not implemeted */
-enum G_DL = 6;
-enum G_RESERVED2 = 7; /* not implemeted */
-enum G_RESERVED3 = 8; /* not implemeted */
-enum G_SPRITE2D_BASE = 9; /* sprite command */
+/* handle 0 gracefully */
+
+/* not implemeted */
+/* move a block of memory (up to 4 words) to dmem */
+
+/* not implemeted */
+
+/* not implemeted */
+/* not implemeted */
+/* sprite command */
 
 /* IMMEDIATE commands: */
-enum G_IMMFIRST = -65;
-enum G_TRI1 = G_IMMFIRST - 0;
-enum G_CULLDL = G_IMMFIRST - 1;
-enum G_POPMTX = G_IMMFIRST - 2;
-enum G_MOVEWORD = G_IMMFIRST - 3;
-enum G_TEXTURE = G_IMMFIRST - 4;
-enum G_SETOTHERMODE_H = G_IMMFIRST - 5;
-enum G_SETOTHERMODE_L = G_IMMFIRST - 6;
-enum G_ENDDL = G_IMMFIRST - 7;
-enum G_SETGEOMETRYMODE = G_IMMFIRST - 8;
-enum G_CLEARGEOMETRYMODE = G_IMMFIRST - 9;
-enum G_LINE3D = G_IMMFIRST - 10;
-enum G_RDPHALF_1 = G_IMMFIRST - 11;
-enum G_RDPHALF_2 = G_IMMFIRST - 12;
-
-enum G_RDPHALF_CONT = G_IMMFIRST - 13;
 
 /* We are overloading 2 of the immediate commands
    to keep the byte alignment of dmem the same */
 
-enum G_SPRITE2D_SCALEFLIP = G_IMMFIRST - 1;
-enum G_SPRITE2D_DRAW = G_IMMFIRST - 2;
-
 /* RDP commands: */
-enum G_NOOP = 0xc0; /*   0 */
+/*   0 */
 
 /* F3DEX_GBI_2 */
 
@@ -270,20 +281,19 @@ extern (D) auto GPACK_ZDZ(T0, T1)(auto ref T0 z, auto ref T1 dz)
 /*
  * G_MTX: parameter flags
  */
-
+enum G_MTX_MODELVIEW = 0x00; /* matrix types */
+enum G_MTX_PROJECTION = 0x04;
+enum G_MTX_MUL = 0x00; /* concat or load */
+enum G_MTX_LOAD = 0x02;
+enum G_MTX_NOPUSH = 0x00; /* push or not */
+enum G_MTX_PUSH = 0x01;
+/* F3DEX_GBI_2 */
 /* matrix types */
 
 /* concat or load */
 
 /* push or not */
 
-/* F3DEX_GBI_2 */
-enum G_MTX_MODELVIEW = 0x00; /* matrix types */
-enum G_MTX_PROJECTION = 0x01;
-enum G_MTX_MUL = 0x00; /* concat or load */
-enum G_MTX_LOAD = 0x02;
-enum G_MTX_NOPUSH = 0x00; /* push or not */
-enum G_MTX_PUSH = 0x04;
 /* F3DEX_GBI_2 */
 
 /*
@@ -314,25 +324,23 @@ enum G_MTX_PUSH = 0x04;
 enum G_ZBUFFER = 0x00000001;
 enum G_SHADE = 0x00000004; /* enable Gouraud interp */
 /* rest of low byte reserved for setup ucode */
+enum G_TEXTURE_ENABLE = 0x00000000; /* Ignored               */
+enum G_SHADING_SMOOTH = 0x00200000; /* flat or smooth shaded */
+enum G_CULL_FRONT = 0x00000200;
+enum G_CULL_BACK = 0x00000400;
+enum G_CULL_BOTH = 0x00000600; /* To make code cleaner */
 
-/* Ignored               */
+/* Microcode use only */
 /* flat or smooth shaded */
 
 /* To make code cleaner */
-
-enum G_TEXTURE_ENABLE = 0x00000002; /* Microcode use only */
-enum G_SHADING_SMOOTH = 0x00000200; /* flat or smooth shaded */
-enum G_CULL_FRONT = 0x00001000;
-enum G_CULL_BACK = 0x00002000;
-enum G_CULL_BOTH = 0x00003000; /* To make code cleaner */
 
 enum G_FOG = 0x00010000;
 enum G_LIGHTING = 0x00020000;
 enum G_TEXTURE_GEN = 0x00040000;
 enum G_TEXTURE_GEN_LINEAR = 0x00080000;
 enum G_LOD = 0x00100000; /* NOT IMPLEMENTED */
-
-enum G_CLIPPING = 0x00000000;
+enum G_CLIPPING = 0x00800000;
 
 /* NOT IMPLEMENTED */
 
@@ -729,6 +737,7 @@ enum G_DL_NOPUSH = 0x01;
 /*
  * BEGIN C-specific section: (typedef's)
  */
+// #if defined(_LANGUAGE_C) || defined(_LANGUAGE_C_PLUS_PLUS)
 
 /*
  * Data Structures
@@ -766,51 +775,96 @@ enum G_DL_NOPUSH = 0x01;
 /*
  * Vertex (set up for use with colors)
  */
+struct Vtx_t
+{
+    /* x, y, z */
 
-/* x, y, z */
+    float[3] ob; /* x, y, z */
 
-/* x, y, z */
-
-/* texture coord */
-/* color & alpha */
+    ushort flag;
+    short[2] tc; /* texture coord */
+    ubyte[4] cn; /* color & alpha */
+}
 
 /*
  * Vertex (set up for use with normals)
  */
+struct Vtx_tn
+{
+    /* x, y, z */
 
-/* x, y, z */
+    float[3] ob; /* x, y, z */
 
-/* x, y, z */
+    ushort flag;
+    short[2] tc; /* texture coord */
+    byte[3] n; /* normal */
+    ubyte a; /* alpha  */
+}
 
-/* texture coord */
-/* normal */
-/* alpha  */
-
-/* Use this one for colors  */
-/* Use this one for normals */
+union Vtx
+{
+    Vtx_t v; /* Use this one for colors  */
+    Vtx_tn n; /* Use this one for normals */
+    long force_structure_alignment;
+}
 
 /*
  * Sprite structure
  */
 
-/* 20 bytes for above */
+struct uSprite_t
+{
+    void* SourceImagePointer;
+    void* TlutPointer;
+    short Stride;
+    short SubImageWidth;
+    short SubImageHeight;
+    char SourceImageType;
+    char SourceImageBitSize;
+    short SourceImageOffsetS;
+    short SourceImageOffsetT;
+    /* 20 bytes for above */
 
-/* padding to bring structure size to 64 bit allignment */
+    /* padding to bring structure size to 64 bit allignment */
+    char[4] dummy;
+}
 
-/* Need to make sure this is 64 bit aligned */
+union uSprite
+{
+    uSprite_t s;
+
+    /* Need to make sure this is 64 bit aligned */
+    long[3] force_structure_allignment;
+}
 
 /*
  * Triangle face
  */
+struct Tri
+{
+    ubyte flag;
+    ubyte[3] v;
+}
 
+// #ifndef GBI_FLOATS
 /*
  * 4x4 matrix, fixed point s15.16 format.
  * First 8 words are integer portion of the 4x4 matrix
  * Last 8 words are the fraction portion of the 4x4 matrix
  */
-struct Mtx {
+// typedef s32	Mtx_t[4][4];
+
+// typedef union {
+//     Mtx_t		m;
+//     long long int	force_structure_alignment;
+// } Mtx;
+// #else
+struct Mtx
+{
     float[4][4] m;
 }
+
+// #endif
 
 /*
  * Viewport
@@ -833,7 +887,7 @@ struct Mtx {
  * but we don't have the ucode to do that...
  *
  */
-/* 10 bits of integer screen-Z precision */
+enum G_MAXZ = 0x03ff; /* 10 bits of integer screen-Z precision */
 
 /*
  * The viewport structure elements have 2 bits of fraction, necessary
@@ -846,18 +900,18 @@ struct Mtx {
  *		(SCREEN_WD/2)*4, (SCREEN_HT/2)*4, G_MAXZ, 0,
  *		(SCREEN_WD/2)*4, (SCREEN_HT/2)*4, 0, 0,
  */
-
-struct Vp_t {
-    short[4] vscale;  /* scale, 2 bits fraction */
-    short[4] vtrans;  /* translate, 2 bits fraction */
+struct Vp_t
+{
+    short[4] vscale; /* scale, 2 bits fraction */
+    short[4] vtrans; /* translate, 2 bits fraction */
     /* both the above arrays are padded to 64-bit boundary */
 }
 
-union Vp {
-    Vp_t  vp;
-    ulong force_structure_alignment;
+union Vp
+{
+    Vp_t vp;
+    long force_structure_alignment;
 }
-
 
 /*
  * MOVEMEM indices
@@ -867,11 +921,23 @@ union Vp {
  * which to store a 1-4 word DMA.
  *
  */
-
 /* 0,4 are reserved by G_MTX */
-
-/* NOTE: this is in moveword table */
-
+enum G_MV_MMTX = 2;
+enum G_MV_PMTX = 6;
+enum G_MV_VIEWPORT = 8;
+enum G_MV_LIGHT = 10;
+enum G_MV_POINT = 12;
+enum G_MV_MATRIX = 14; /* NOTE: this is in moveword table */
+enum G_MVO_LOOKATX = 0 * 24;
+enum G_MVO_LOOKATY = 1 * 24;
+enum G_MVO_L0 = 2 * 24;
+enum G_MVO_L1 = 3 * 24;
+enum G_MVO_L2 = 4 * 24;
+enum G_MVO_L3 = 5 * 24;
+enum G_MVO_L4 = 6 * 24;
+enum G_MVO_L5 = 7 * 24;
+enum G_MVO_L6 = 8 * 24;
+enum G_MVO_L7 = 9 * 24;
 /* F3DEX_GBI_2 */
 
 /* NOTE: this is in moveword table */
@@ -886,15 +952,80 @@ union Vp {
  * an immediate word will be stored.
  *
  */
-/* NOTE: also used by movemem */
-
+enum G_MW_MATRIX = 0x00; /* NOTE: also used by movemem */
+enum G_MW_NUMLIGHT = 0x02;
+enum G_MW_CLIP = 0x04;
+enum G_MW_SEGMENT = 0x06;
+enum G_MW_FOG = 0x08;
+enum G_MW_LIGHTCOL = 0x0a;
+enum G_MW_FORCEMTX = 0x0c;
 /* F3DEX_GBI_2 */
 
 /* F3DEX_GBI_2 */
+enum G_MW_PERSPNORM = 0x0e;
 
 /*
  * These are offsets from the address in the dmem table
  */
+enum G_MWO_NUMLIGHT = 0x00;
+enum G_MWO_CLIP_RNX = 0x04;
+enum G_MWO_CLIP_RNY = 0x0c;
+enum G_MWO_CLIP_RPX = 0x14;
+enum G_MWO_CLIP_RPY = 0x1c;
+enum G_MWO_SEGMENT_0 = 0x00;
+enum G_MWO_SEGMENT_1 = 0x01;
+enum G_MWO_SEGMENT_2 = 0x02;
+enum G_MWO_SEGMENT_3 = 0x03;
+enum G_MWO_SEGMENT_4 = 0x04;
+enum G_MWO_SEGMENT_5 = 0x05;
+enum G_MWO_SEGMENT_6 = 0x06;
+enum G_MWO_SEGMENT_7 = 0x07;
+enum G_MWO_SEGMENT_8 = 0x08;
+enum G_MWO_SEGMENT_9 = 0x09;
+enum G_MWO_SEGMENT_A = 0x0a;
+enum G_MWO_SEGMENT_B = 0x0b;
+enum G_MWO_SEGMENT_C = 0x0c;
+enum G_MWO_SEGMENT_D = 0x0d;
+enum G_MWO_SEGMENT_E = 0x0e;
+enum G_MWO_SEGMENT_F = 0x0f;
+enum G_MWO_FOG = 0x00;
+enum G_MWO_aLIGHT_1 = 0x00;
+enum G_MWO_bLIGHT_1 = 0x04;
+enum G_MWO_aLIGHT_2 = 0x18;
+enum G_MWO_bLIGHT_2 = 0x1c;
+enum G_MWO_aLIGHT_3 = 0x30;
+enum G_MWO_bLIGHT_3 = 0x34;
+enum G_MWO_aLIGHT_4 = 0x48;
+enum G_MWO_bLIGHT_4 = 0x4c;
+enum G_MWO_aLIGHT_5 = 0x60;
+enum G_MWO_bLIGHT_5 = 0x64;
+enum G_MWO_aLIGHT_6 = 0x78;
+enum G_MWO_bLIGHT_6 = 0x7c;
+enum G_MWO_aLIGHT_7 = 0x90;
+enum G_MWO_bLIGHT_7 = 0x94;
+enum G_MWO_aLIGHT_8 = 0xa8;
+enum G_MWO_bLIGHT_8 = 0xac;
+
+enum G_MWO_MATRIX_XX_XY_I = 0x00;
+enum G_MWO_MATRIX_XZ_XW_I = 0x04;
+enum G_MWO_MATRIX_YX_YY_I = 0x08;
+enum G_MWO_MATRIX_YZ_YW_I = 0x0c;
+enum G_MWO_MATRIX_ZX_ZY_I = 0x10;
+enum G_MWO_MATRIX_ZZ_ZW_I = 0x14;
+enum G_MWO_MATRIX_WX_WY_I = 0x18;
+enum G_MWO_MATRIX_WZ_WW_I = 0x1c;
+enum G_MWO_MATRIX_XX_XY_F = 0x20;
+enum G_MWO_MATRIX_XZ_XW_F = 0x24;
+enum G_MWO_MATRIX_YX_YY_F = 0x28;
+enum G_MWO_MATRIX_YZ_YW_F = 0x2c;
+enum G_MWO_MATRIX_ZX_ZY_F = 0x30;
+enum G_MWO_MATRIX_ZZ_ZW_F = 0x34;
+enum G_MWO_MATRIX_WX_WY_F = 0x38;
+enum G_MWO_MATRIX_WZ_WW_F = 0x3c;
+enum G_MWO_POINT_RGBA = 0x10;
+enum G_MWO_POINT_ST = 0x14;
+enum G_MWO_POINT_XYSCREEN = 0x18;
+enum G_MWO_POINT_ZSCREEN = 0x1c;
 
 /*
  * Light structure.
@@ -906,27 +1037,150 @@ union Vp {
  *
  */
 
-/* diffuse light value (rgba) */
+struct Light_t
+{
+    ubyte[3] col; /* diffuse light value (rgba) */
+    char pad1;
+    ubyte[3] colc; /* copy of diffuse light value (rgba) */
+    char pad2;
+    byte[3] dir; /* direction of light (normalized) */
+    char pad3;
+}
 
-/* copy of diffuse light value (rgba) */
+struct Ambient_t
+{
+    ubyte[3] col; /* ambient light value (rgba) */
+    char pad1;
+    ubyte[3] colc; /* copy of ambient light value (rgba) */
+    char pad2;
+}
 
-/* direction of light (normalized) */
+struct Hilite_t
+{
+    int x1;
+    int y1;
+    int x2;
+    int y2; /* texture offsets for highlight 1/2 */
+}
 
-/* ambient light value (rgba) */
+union Light
+{
+    Light_t l;
+    long[2] force_structure_alignment;
+}
 
-/* copy of ambient light value (rgba) */
+union Ambient
+{
+    Ambient_t l;
+    long[1] force_structure_alignment;
+}
 
-/* texture offsets for highlight 1/2 */
+struct Lightsn
+{
+    Ambient a;
+    Light[7] l;
+}
+
+struct Lights0
+{
+    Ambient a;
+    Light[1] l;
+}
+
+struct Lights1
+{
+    Ambient a;
+    Light[1] l;
+}
+
+struct Lights2
+{
+    Ambient a;
+    Light[2] l;
+}
+
+struct Lights3
+{
+    Ambient a;
+    Light[3] l;
+}
+
+struct Lights4
+{
+    Ambient a;
+    Light[4] l;
+}
+
+struct Lights5
+{
+    Ambient a;
+    Light[5] l;
+}
+
+struct Lights6
+{
+    Ambient a;
+    Light[6] l;
+}
+
+struct Lights7
+{
+    Ambient a;
+    Light[7] l;
+}
+
+struct LookAt
+{
+    Light[2] l;
+}
+
+union Hilite
+{
+    Hilite_t h;
+    c_long[4] force_structure_alignment;
+}
 
 /* Don't declare these for F3D_OLD to avoid bss reordering */
 
 /*
  *  Graphics DMA Packet
  */
+struct Gdma
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        uint, "par", 8,
+        uint, "len", 16));
+
+    uintptr_t addr;
+}
 
 /*
  * Graphics Immediate Mode Packet types
  */
+struct Gtri
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad", 24));
+
+    Tri tri;
+}
+
+struct Gpopmtx
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad1", 24,
+        int, "pad2", 24,
+        ubyte, "param", 8));
+}
 
 /*
  * typedef struct {
@@ -937,33 +1191,226 @@ union Vp {
  * 		int		base:24;
  * } Gsegment;
  */
+struct Gsegment
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad0", 8,
+        int, "mw_index", 8,
+        int, "number", 8,
+        int, "pad1", 8,
+        int, "base", 24));
+}
+
+struct GsetothermodeL
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad0", 8,
+        int, "sft", 8,
+        int, "len", 8,
+        uint, "data", 32));
+}
+
+struct GsetothermodeH
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad0", 8,
+        int, "sft", 8,
+        int, "len", 8,
+        uint, "data", 32));
+}
+
+struct Gtexture
+{
+    ubyte cmd;
+    ubyte lodscale;
+    ubyte tile;
+    ubyte on;
+    ushort s;
+    ushort t;
+}
+
+struct Gline3D
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad", 24));
+
+    Tri line;
+}
+
+struct Gperspnorm
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "pad1", 24));
+
+    short pad2;
+    short scale;
+}
 
 /*
  * RDP Packet types
  */
+struct Gsetimg
+{
+    import std.bitmanip : bitfields;
 
-/* really only 10 bits, extra	*/
-/* to account for 1024		*/
+    mixin(bitfields!(
+        int, "cmd", 8,
+        uint, "fmt", 3,
+        uint, "siz", 2,
+        uint, "pad", 7,
+        uint, "wd", 12));
 
-/* command			*/
-/* X coordinate of upper left	*/
-/* Y coordinate of upper left	*/
-/* Padding			*/
-/* Tile descriptor index	*/
-/* X coordinate of lower right	*/
-/* Y coordinate of lower right	*/
-/* S texture coord at top left	*/
-/* T texture coord at top left	*/
-/* Change in S per change in X	*/
-/* Change in T per change in Y	*/
+    /* really only 10 bits, extra	*/
+    uintptr_t dram; /* to account for 1024		*/
+}
+
+struct Gsetcombine
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        uint, "muxs0", 24,
+        uint, "muxs1", 32));
+}
+
+struct Gsetcolor
+{
+    import std.bitmanip : bitfields;
+    mixin(bitfields!(int, "cmd", 8));
+
+    ubyte pad;
+    ubyte prim_min_level;
+    ubyte prim_level;
+    c_ulong color;
+}
+
+struct Gfillrect
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        int, "x0", 10,
+        int, "x0frac", 2,
+        int, "y0", 10,
+        int, "y0frac", 2,
+        uint, "pad", 8,
+        int, "x1", 10,
+        int, "x1frac", 2,
+        int, "y1", 10,
+        int, "y1frac", 2));
+}
+
+struct Gsettile
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        uint, "fmt", 3,
+        uint, "siz", 2,
+        uint, "pad0", 1,
+        uint, "line", 9,
+        uint, "tmem", 9,
+        uint, "pad1", 5,
+        uint, "tile", 3,
+        uint, "palette", 4,
+        uint, "ct", 1,
+        uint, "mt", 1,
+        uint, "maskt", 4,
+        uint, "shiftt", 4,
+        uint, "cs", 1,
+        uint, "ms", 1,
+        uint, "masks", 4,
+        uint, "shifts", 4));
+}
+
+struct Gloadtile
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        int, "cmd", 8,
+        uint, "sl", 12,
+        uint, "tl", 12,
+        int, "pad", 5,
+        uint, "tile", 3,
+        uint, "sh", 12,
+        uint, "th", 12));
+}
+
+alias Gloadblock = Gloadtile;
+
+alias Gsettilesize = Gloadtile;
+
+alias Gloadtlut = Gloadtile;
+
+struct Gtexrect
+{
+    import std.bitmanip : bitfields;
+
+    mixin(bitfields!(
+        uint, "cmd", 8,
+        uint, "xl", 12,
+        uint, "yl", 12,
+        uint, "pad1", 5,
+        uint, "tile", 3,
+        uint, "xh", 12,
+        uint, "yh", 12));
+    mixin(bitfields!(
+        uint, "s", 16,
+        uint, "t", 16,
+        uint, "dsdx", 16,
+        uint, "dtdy", 16));
+
+    /* command			*/
+    /* X coordinate of upper left	*/
+    /* Y coordinate of upper left	*/
+    /* Padding			*/
+    /* Tile descriptor index	*/
+    /* X coordinate of lower right	*/
+    /* Y coordinate of lower right	*/
+    /* S texture coord at top left	*/
+    /* T texture coord at top left	*/
+    /* Change in S per change in X	*/
+    /* Change in T per change in Y	*/
+}
 
 /*
  * Textured rectangles are 128 bits not 64 bits
  */
+struct TexRect
+{
+    c_ulong w0;
+    c_ulong w1;
+    c_ulong w2;
+    c_ulong w3;
+}
 
 /*
  * Generic Gfx Packet
  */
+struct Gwords
+{
+    uintptr_t w0;
+    uintptr_t w1;
+}
 
 /*
  * This union is the fundamental type of the display list.
@@ -973,17 +1420,6 @@ union Vp {
  * 64-bit systems, only the 'words' member may be accessed; the rest of the
  * structs don't have matching layouts for now.)
  */
-
-/* use for setscissor also */
-
-/* use for loadblock also, th is dxt */
-
-struct Gwords
-{
-    uintptr_t w0;
-    uintptr_t w1;
-}
-
 union Gfx
 {
     Gwords words;
@@ -1002,6 +1438,17 @@ union Gfx
 /*
  * DMA macros
  */
+
+//@@@ D conversion - todo: fix
+//extern (D) auto gSPNoOp(T)(auto ref T pkt)
+//{
+//    return gDma0p(pkt, G_SPNOOP, 0, 0);
+//}
+
+//extern (D) auto gsSPNoOp()
+//{
+//    return gsDma0p(G_SPNOOP, 0, 0);
+//}
 
 /* F3DEX_GBI_2 */
 
@@ -1027,13 +1474,63 @@ union Gfx
  *        +-+---+-----------------------------+
  */
 
+extern (D) auto gSPViewport(T0, T1)(auto ref T0 pkt, auto ref T1 v)
+{
+    return gDma2p(pkt, G_MOVEMEM, v, Vp.sizeof, G_MV_VIEWPORT, 0);
+}
+
+extern (D) auto gsSPViewport(T)(auto ref T v)
+{
+    return gsDma2p(G_MOVEMEM, v, Vp.sizeof, G_MV_VIEWPORT, 0);
+}
+
 /* F3DEX_GBI_2 */
 
 /* F3DEX_GBI_2 */
+
+extern (D) auto gSPDisplayList(T0, T1)(auto ref T0 pkt, auto ref T1 dl)
+{
+    return gDma1p(pkt, G_DL, dl, 0, G_DL_PUSH);
+}
+
+extern (D) auto gsSPDisplayList(T)(auto ref T dl)
+{
+    return gsDma1p(G_DL, dl, 0, G_DL_PUSH);
+}
+
+extern (D) auto gSPBranchList(T0, T1)(auto ref T0 pkt, auto ref T1 dl)
+{
+    return gDma1p(pkt, G_DL, dl, 0, G_DL_NOPUSH);
+}
+
+extern (D) auto gsSPBranchList(T)(auto ref T dl)
+{
+    return gsDma1p(G_DL, dl, 0, G_DL_NOPUSH);
+}
+
+extern (D) auto gSPSprite2DBase(T0, T1)(auto ref T0 pkt, auto ref T1 s)
+{
+    return gDma1p(pkt, G_SPRITE2D_BASE, s, uSprite.sizeof, 0);
+}
+
+extern (D) auto gsSPSprite2DBase(T)(auto ref T s)
+{
+    return gsDma1p(G_SPRITE2D_BASE, s, uSprite.sizeof, 0);
+}
 
 /*
  * RSP short command (no DMA required) macros
  */
+
+extern (D) auto gMoveWd(T0, T1, T2, T3)(auto ref T0 pkt, auto ref T1 index, auto ref T2 offset, auto ref T3 data)
+{
+    return gDma1p(pkt, G_MOVEWORD, data, offset, index);
+}
+
+extern (D) auto gsMoveWd(T0, T1, T2)(auto ref T0 index, auto ref T1 offset, auto ref T2 data)
+{
+    return gsDma1p(G_MOVEWORD, data, offset, index);
+}
 
 /* F3DEX_GBI_2 */
 
@@ -1045,6 +1542,35 @@ union Gfx
  * Note: the SP1Triangle() and line macros multiply the vertex indices
  * by 10, this is an optimization for the microcode.
  */
+extern (D) auto __gsSP1Triangle_w1(T0, T1, T2)(auto ref T0 v0, auto ref T1 v1, auto ref T2 v2)
+{
+    return _SHIFTL(v0 * 2, 16, 8) | _SHIFTL(v1 * 2, 8, 8) | _SHIFTL(v2 * 2, 0, 8);
+}
+
+extern (D) auto __gsSP1Triangle_w1f(T0, T1, T2, T3)(auto ref T0 v0, auto ref T1 v1, auto ref T2 v2, auto ref T3 flag)
+{
+    return (flag == 0) ? __gsSP1Triangle_w1(v0, v1, v2) : (flag == 1) ? __gsSP1Triangle_w1(v1, v2, v0) : __gsSP1Triangle_w1(v2, v0, v1);
+}
+
+extern (D) auto __gsSPLine3D_w1(T0, T1, T2)(auto ref T0 v0, auto ref T1 v1, auto ref T2 wd)
+{
+    return _SHIFTL(v0 * 2, 16, 8) | _SHIFT(v1 * 2, 8, 8) | _SHIFT(wd, 0, 8);
+}
+
+extern (D) auto __gsSPLine3D_w1f(T0, T1, T2, T3)(auto ref T0 v0, auto ref T1 v1, auto ref T2 wd, auto ref T3 flag)
+{
+    return (flag == 0) ? __gsSPLine3D_w1(v0, v1, wd) : __gsSPLine3D_w1(v1, v0, wd);
+}
+
+extern (D) auto __gsSP1Quadrangle_w1f(T0, T1, T2, T3, T4)(auto ref T0 v0, auto ref T1 v1, auto ref T2 v2, auto ref T3 v3, auto ref T4 flag)
+{
+    return (flag == 0) ? __gsSP1Triangle_w1(v0, v1, v2) : (flag == 1) ? __gsSP1Triangle_w1(v1, v2, v3) : (flag == 2) ? __gsSP1Triangle_w1(v2, v3, v0) : __gsSP1Triangle_w1(v3, v0, v1);
+}
+
+extern (D) auto __gsSP1Quadrangle_w2f(T0, T1, T2, T3, T4)(auto ref T0 v0, auto ref T1 v1, auto ref T2 v2, auto ref T3 v3, auto ref T4 flag)
+{
+    return (flag == 0) ? __gsSP1Triangle_w1(v0, v2, v3) : (flag == 1) ? __gsSP1Triangle_w1(v1, v3, v0) : (flag == 2) ? __gsSP1Triangle_w1(v2, v0, v1) : __gsSP1Triangle_w1(v3, v1, v2);
+}
 
 /***
  ***  1 Triangle
@@ -1100,10 +1626,31 @@ union Gfx
 
 /* F3DEX_GBI/F3DLP_GBI */
 
+extern (D) auto gSPSegment(T0, T1, T2)(auto ref T0 pkt, auto ref T1 segment, auto ref T2 base)
+{
+    return gMoveWd(pkt, G_MW_SEGMENT, segment * 4, base);
+}
+
+extern (D) auto gsSPSegment(T0, T1)(auto ref T0 segment, auto ref T1 base)
+{
+    return gsMoveWd(G_MW_SEGMENT, segment * 4, base);
+}
+
 /*
  * Clipping Macros
  */
-
+enum FR_NEG_FRUSTRATIO_1 = 0x00000001;
+enum FR_POS_FRUSTRATIO_1 = 0x0000ffff;
+enum FR_NEG_FRUSTRATIO_2 = 0x00000002;
+enum FR_POS_FRUSTRATIO_2 = 0x0000fffe;
+enum FR_NEG_FRUSTRATIO_3 = 0x00000003;
+enum FR_POS_FRUSTRATIO_3 = 0x0000fffd;
+enum FR_NEG_FRUSTRATIO_4 = 0x00000004;
+enum FR_POS_FRUSTRATIO_4 = 0x0000fffc;
+enum FR_NEG_FRUSTRATIO_5 = 0x00000005;
+enum FR_POS_FRUSTRATIO_5 = 0x0000fffb;
+enum FR_NEG_FRUSTRATIO_6 = 0x00000006;
+enum FR_POS_FRUSTRATIO_6 = 0x0000fffa;
 /*
  * r should be one of: FRUSTRATIO_1, FRUSTRATIO_2, FRUSTRATIO_3, ... FRUSTRATIO_6
  */
@@ -1145,6 +1692,24 @@ union Gfx
  *  flag = G_BZ_PERSP or G_BZ_ORTHO
  */
 
+enum G_BZ_PERSP = 0;
+enum G_BZ_ORTHO = 1;
+
+extern (D) auto G_DEPTOZS(T0, T1, T2, T3)(auto ref T0 zval, auto ref T1 near, auto ref T2 far, auto ref T3 flag)
+{
+    return G_DEPTOZSrg(zval, near, far, flag, 0, G_MAXZ);
+}
+
+extern (D) auto gSPBranchLessZ(T0, T1, T2, T3, T4, T5, T6)(auto ref T0 pkt, auto ref T1 dl, auto ref T2 vtx, auto ref T3 zval, auto ref T4 near, auto ref T5 far, auto ref T6 flag)
+{
+    return gSPBranchLessZrg(pkt, dl, vtx, zval, near, far, flag, 0, G_MAXZ);
+}
+
+extern (D) auto gsSPBranchLessZ(T0, T1, T2, T3, T4, T5)(auto ref T0 dl, auto ref T1 vtx, auto ref T2 zval, auto ref T3 near, auto ref T4 far, auto ref T5 flag)
+{
+    return gsSPBranchLessZrg(dl, vtx, zval, near, far, flag, 0, G_MAXZ);
+}
+
 /*
  *  gSPBranchLessZraw   Branch DL if (vtx.z) less than or equal (raw zval).
  *
@@ -1160,20 +1725,79 @@ union Gfx
  * uc_dstart = ucode data section start
  */
 
+extern (D) auto gSPLoadUcode(T0, T1, T2)(auto ref T0 pkt, auto ref T1 uc_start, auto ref T2 uc_dstart)
+{
+    return gSPLoadUcodeEx(pkt, uc_start, uc_dstart, SP_UCODE_DATA_SIZE);
+}
+
+extern (D) auto gsSPLoadUcode(T0, T1)(auto ref T0 uc_start, auto ref T1 uc_dstart)
+{
+    return gsSPLoadUcodeEx(uc_start, uc_dstart, SP_UCODE_DATA_SIZE);
+}
+
 /*
  * gSPDma_io  DMA to/from DMEM/IMEM for DEBUG.
  */
 
+extern (D) auto gSPDmaRead(T0, T1, T2, T3)(auto ref T0 pkt, auto ref T1 dmem, auto ref T2 dram, auto ref T3 size)
+{
+    return gSPDma_io(pkt, 0, dmem, dram, size);
+}
+
+extern (D) auto gsSPDmaRead(T0, T1, T2)(auto ref T0 dmem, auto ref T1 dram, auto ref T2 size)
+{
+    return gsSPDma_io(0, dmem, dram, size);
+}
+
+extern (D) auto gSPDmaWrite(T0, T1, T2, T3)(auto ref T0 pkt, auto ref T1 dmem, auto ref T2 dram, auto ref T3 size)
+{
+    return gSPDma_io(pkt, 1, dmem, dram, size);
+}
+
+extern (D) auto gsSPDmaWrite(T0, T1, T2)(auto ref T0 dmem, auto ref T1 dram, auto ref T2 size)
+{
+    return gsSPDma_io(1, dmem, dram, size);
+}
+
 /*
  * Lighting Macros
  */
+extern (D) auto NUML(T)(auto ref T n)
+{
+    return n * 24;
+}
 
+enum NUMLIGHTS_0 = 1;
+enum NUMLIGHTS_1 = 1;
+enum NUMLIGHTS_2 = 2;
+enum NUMLIGHTS_3 = 3;
+enum NUMLIGHTS_4 = 4;
+enum NUMLIGHTS_5 = 5;
+enum NUMLIGHTS_6 = 6;
+enum NUMLIGHTS_7 = 7;
 /*
  * n should be one of: NUMLIGHTS_0, NUMLIGHTS_1, ..., NUMLIGHTS_7
  * NOTE: in addition to the number of directional lights specified,
  *       there is always 1 ambient light
  */
+extern (D) auto gSPNumLights(T0, T1)(auto ref T0 pkt, auto ref T1 n)
+{
+    return gMoveWd(pkt, G_MW_NUMLIGHT, G_MWO_NUMLIGHT, NUML(n));
+}
 
+extern (D) auto gsSPNumLights(T)(auto ref T n)
+{
+    return gsMoveWd(G_MW_NUMLIGHT, G_MWO_NUMLIGHT, NUML(n));
+}
+
+enum LIGHT_1 = 1;
+enum LIGHT_2 = 2;
+enum LIGHT_3 = 3;
+enum LIGHT_4 = 4;
+enum LIGHT_5 = 5;
+enum LIGHT_6 = 6;
+enum LIGHT_7 = 7;
+enum LIGHT_8 = 8;
 /*
  * l should point to a Light struct
  * n should be one of: LIGHT_1, LIGHT_2, ..., LIGHT_8
@@ -1182,6 +1806,15 @@ union Gfx
  *       LIGHT_1 through LIGHT_3 will be the directional lights and light
  *       LIGHT_4 will be the ambient light.
  */
+extern (D) auto gSPLight(T0, T1, T2)(auto ref T0 pkt, auto ref T1 l, auto ref T2 n)
+{
+    return gDma2p(pkt, G_MOVEMEM, l, Light.sizeof, G_MV_LIGHT, n * 24 + 24);
+}
+
+extern (D) auto gsSPLight(T0, T1)(auto ref T0 l, auto ref T1 n)
+{
+    return gsDma2p(G_MOVEMEM, l, Light.sizeof, G_MV_LIGHT, n * 24 + 24);
+}
 
 /* F3DEX_GBI_2 */
 
@@ -1198,6 +1831,25 @@ union Gfx
 /*
  * Reflection/Hiliting Macros
  */
+extern (D) auto gSPLookAtX(T0, T1)(auto ref T0 pkt, auto ref T1 l)
+{
+    return gDma2p(pkt, G_MOVEMEM, l, Light.sizeof, G_MV_LIGHT, G_MVO_LOOKATX);
+}
+
+extern (D) auto gsSPLookAtX(T)(auto ref T l)
+{
+    return gsDma2p(G_MOVEMEM, l, Light.sizeof, G_MV_LIGHT, G_MVO_LOOKATX);
+}
+
+extern (D) auto gSPLookAtY(T0, T1)(auto ref T0 pkt, auto ref T1 l)
+{
+    return gDma2p(pkt, G_MOVEMEM, l, Light.sizeof, G_MV_LIGHT, G_MVO_LOOKATY);
+}
+
+extern (D) auto gsSPLookAtY(T)(auto ref T l)
+{
+    return gsDma2p(G_MOVEMEM, l, Light.sizeof, G_MV_LIGHT, G_MVO_LOOKATY);
+}
 
 /* F3DEX_GBI_2 */
 
@@ -1216,11 +1868,29 @@ union Gfx
  * max is where fog is thickest (usually 1000)
  *
  */
+extern (D) auto gSPFogFactor(T0, T1, T2)(auto ref T0 pkt, auto ref T1 fm, auto ref T2 fo)
+{
+    return gMoveWd(pkt, G_MW_FOG, G_MWO_FOG, _SHIFTL(fm, 16, 16) | _SHIFTL(fo, 0, 16));
+}
+
+extern (D) auto gsSPFogFactor(T0, T1)(auto ref T0 fm, auto ref T1 fo)
+{
+    return gsMoveWd(G_MW_FOG, G_MWO_FOG, _SHIFTL(fm, 16, 16) | _SHIFTL(fo, 0, 16));
+}
+
+extern (D) auto gSPFogPosition(T0, T1, T2)(auto ref T0 pkt, auto ref T1 min, auto ref T2 max)
+{
+    return gMoveWd(pkt, G_MW_FOG, G_MWO_FOG, _SHIFTL(128000 / (max - min), 16, 16) | _SHIFTL((500 - min) * 256 / (max - min), 0, 16));
+}
+
+extern (D) auto gsSPFogPosition(T0, T1)(auto ref T0 min, auto ref T1 max)
+{
+    return gsMoveWd(G_MW_FOG, G_MWO_FOG, _SHIFTL(128000 / (max - min), 16, 16) | _SHIFTL((500 - min) * 256 / (max - min), 0, 16));
+}
 
 /*
  * Macros to turn texture on/off
  */
-
 /*
  * Different version of SPTexture macro, has an additional parameter
  * which is currently reserved in the microcode.
@@ -1235,9 +1905,47 @@ union Gfx
  * which is currently reserved in the microcode.
  */
 
+extern (D) auto gSPPerspNormalize(T0, T1)(auto ref T0 pkt, auto ref T1 s)
+{
+    return gMoveWd(pkt, G_MW_PERSPNORM, 0, s);
+}
+
+extern (D) auto gsSPPerspNormalize(T)(auto ref T s)
+{
+    return gsMoveWd(G_MW_PERSPNORM, 0, s);
+}
+
+extern (D) auto gSPPopMatrixN(T0, T1, T2)(auto ref T0 pkt, auto ref T1 n, auto ref T2 num)
+{
+    return gDma2p(pkt, G_POPMTX, num * 64, 64, 2, 0);
+}
+
+extern (D) auto gsSPPopMatrixN(T0, T1)(auto ref T0 n, auto ref T1 num)
+{
+    return gsDma2p(G_POPMTX, num * 64, 64, 2, 0);
+}
+
+extern (D) auto gSPPopMatrix(T0, T1)(auto ref T0 pkt, auto ref T1 n)
+{
+    return gSPPopMatrixN(pkt, n, 1);
+}
+
+extern (D) auto gsSPPopMatrix(T)(auto ref T n)
+{
+    return gsSPPopMatrixN(n, 1);
+}
+
 /* F3DEX_GBI_2 */
 
 /* F3DEX_GBI_2 */
+
+extern (D) void gSPEndDisplayList(void* pkt)
+{
+    Gfx* _g = cast(Gfx*) pkt;
+
+    _g.words.w0 = _SHIFTL(G_ENDDL, 24, 8);
+    _g.words.w1 = 0;
+}
 
 /*
  *	One gSPGeometryMode(pkt,c,s) GBI is equal to these two GBIs.
@@ -1247,7 +1955,52 @@ union Gfx
  *
  *	gSPLoadGeometryMode(pkt, word) sets GeometryMode directly.
  */
+extern (D) void gSPGeometryMode(T)(void* pkt, T c, T s)
+{
+    Gfx* _g = cast(Gfx*) pkt;
+    _g.words.w0 = _SHIFTL(G_GEOMETRYMODE,24,8)|_SHIFTL(~cast(u32)(c),0,24);
+    _g.words.w1 = cast(u32) s;
+}
 
+//@@@ D conversion - todo: fix
+//extern (D) auto gsSPGeometryMode(T0, T1)(auto ref T0 c, auto ref T1 s)
+//{
+//    (_SHIFTL(G_GEOMETRYMODE,24,8)|_SHIFTL(~cast(u32)(c),0,24));
+//    return cast(u32)(s);
+//}
+
+extern (D) void gSPSetGeometryMode(T0, T1)(auto ref T0 pkt, auto ref T1 word)
+{
+    gSPGeometryMode(pkt, 0, word);
+}
+
+//extern (D) auto gsSPSetGeometryMode(T)(auto ref T word)
+//{
+//    return gsSPGeometryMode(0, word);
+//}
+
+extern (D) void gSPClearGeometryMode(T0, T1)(auto ref T0 pkt, auto ref T1 word)
+{
+    gSPGeometryMode(pkt, word, 0);
+}
+
+//extern (D) auto gsSPClearGeometryMode(T)(auto ref T word)
+//{
+//    return gsSPGeometryMode(word, 0);
+//}
+
+extern (D) void gSPLoadGeometryMode(T0, T1)(auto ref T0 pkt, auto ref T1 word)
+{
+    gSPGeometryMode(pkt, -1, word);
+}
+
+//extern (D) auto gsSPLoadGeometryMode(T)(auto ref T word)
+//{
+//    return gsSPGeometryMode(-1, word);
+//}
+
+//@@@ D conversion - todo: fix
+//alias gsSPGeometryModeSetFirst = gsSPGeometryMode;
 /* F3DEX_GBI_2 */
 
 /*
@@ -1257,23 +2010,219 @@ union Gfx
  */
 
 /* F3DEX_GBI_2 */
+extern (D) void gSPSetOtherMode(T)(void* pkt, T cmd, T sft, T len, T data)
+{
+    Gfx* _g = cast(Gfx*)(pkt);
+    _g.words.w0 = (_SHIFTL(cmd,24,8)|_SHIFTL(32-(sft)-(len),8,8)|
+            _SHIFTL((len)-1,0,8));
+    _g.words.w1 = cast(uint)(data);
+}
 
 /*
  * RDP setothermode register commands - register shadowed in RSP
  */
+extern (D) auto gDPPipelineMode(T0, T1)(auto ref T0 pkt, auto ref T1 mode)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_PIPELINE, 1, mode);
+}
+
+extern (D) auto gsDPPipelineMode(T)(auto ref T mode)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_PIPELINE, 1, mode);
+}
+
+extern (D) auto gDPSetCycleType(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_CYCLETYPE, 2, type);
+}
+
+extern (D) auto gsDPSetCycleType(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_CYCLETYPE, 2, type);
+}
+
+extern (D) auto gDPSetTexturePersp(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_TEXTPERSP, 1, type);
+}
+
+extern (D) auto gsDPSetTexturePersp(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_TEXTPERSP, 1, type);
+}
+
+extern (D) auto gDPSetTextureDetail(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_TEXTDETAIL, 2, type);
+}
+
+extern (D) auto gsDPSetTextureDetail(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_TEXTDETAIL, 2, type);
+}
+
+extern (D) auto gDPSetTextureLOD(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_TEXTLOD, 1, type);
+}
+
+extern (D) auto gsDPSetTextureLOD(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_TEXTLOD, 1, type);
+}
+
+extern (D) auto gDPSetTextureLUT(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_TEXTLUT, 2, type);
+}
+
+extern (D) auto gsDPSetTextureLUT(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_TEXTLUT, 2, type);
+}
+
+extern (D) auto gDPSetTextureFilter(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_TEXTFILT, 2, type);
+}
+
+extern (D) auto gsDPSetTextureFilter(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_TEXTFILT, 2, type);
+}
+
+extern (D) auto gDPSetTextureConvert(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_TEXTCONV, 3, type);
+}
+
+extern (D) auto gsDPSetTextureConvert(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_TEXTCONV, 3, type);
+}
+
+extern (D) auto gDPSetCombineKey(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_COMBKEY, 1, type);
+}
+
+extern (D) auto gsDPSetCombineKey(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_COMBKEY, 1, type);
+}
+
+extern (D) auto gDPSetColorDither(T0, T1)(auto ref T0 pkt, auto ref T1 mode)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_RGBDITHER, 2, mode);
+}
+
+extern (D) auto gsDPSetColorDither(T)(auto ref T mode)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_RGBDITHER, 2, mode);
+}
+
+extern (D) auto gDPSetAlphaDither(T0, T1)(auto ref T0 pkt, auto ref T1 mode)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_H, G_MDSFT_ALPHADITHER, 2, mode);
+}
+
+extern (D) auto gsDPSetAlphaDither(T)(auto ref T mode)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_H, G_MDSFT_ALPHADITHER, 2, mode);
+}
 
 /* 'blendmask' is not supported anymore.
  * The bits are reserved for future use.
  * Fri May 26 13:45:55 PDT 1995
  */
+extern (D) auto gDPSetBlendMask(T0, T1)(auto ref T0 pkt, auto ref T1 mask)
+{
+    return gDPNoOp(pkt);
+}
+
+extern (D) auto gsDPSetBlendMask(T)(auto ref T mask)
+{
+    return gsDPNoOp();
+}
+
+extern (D) auto gDPSetAlphaCompare(T0, T1)(auto ref T0 pkt, auto ref T1 type)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_L, G_MDSFT_ALPHACOMPARE, 2, type);
+}
+
+extern (D) auto gsDPSetAlphaCompare(T)(auto ref T type)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_L, G_MDSFT_ALPHACOMPARE, 2, type);
+}
+
+extern (D) auto gDPSetDepthSource(T0, T1)(auto ref T0 pkt, auto ref T1 src)
+{
+    gSPSetOtherMode(pkt, G_SETOTHERMODE_L, G_MDSFT_ZSRCSEL, 1, src);
+}
+
+extern (D) auto gsDPSetDepthSource(T)(auto ref T src)
+{
+    return gsSPSetOtherMode(G_SETOTHERMODE_L, G_MDSFT_ZSRCSEL, 1, src);
+}
+
+extern (D) auto gDPSetColorImage(T0, T1, T2, T3, T4)(auto ref T0 pkt, auto ref T1 f, auto ref T2 s, auto ref T3 w, auto ref T4 i)
+{
+    return gSetImage(pkt, G_SETCIMG, f, s, w, i);
+}
+
+extern (D) auto gsDPSetColorImage(T0, T1, T2, T3)(auto ref T0 f, auto ref T1 s, auto ref T2 w, auto ref T3 i)
+{
+    return gsSetImage(G_SETCIMG, f, s, w, i);
+}
 
 /* use these for new code */
+extern (D) auto gDPSetDepthImage(T0, T1)(auto ref T0 pkt, auto ref T1 i)
+{
+    return gSetImage(pkt, G_SETZIMG, 0, 0, 1, i);
+}
+
+extern (D) auto gsDPSetDepthImage(T)(auto ref T i)
+{
+    return gsSetImage(G_SETZIMG, 0, 0, 1, i);
+}
 
 /* kept for compatibility */
+alias gDPSetMaskImage = gDPSetDepthImage;
+alias gsDPSetMaskImage = gsDPSetDepthImage;
+
+extern (D) auto gDPSetTextureImage(T0, T1, T2, T3, T4)(auto ref T0 pkt, auto ref T1 f, auto ref T2 s, auto ref T3 w, auto ref T4 i)
+{
+    return gSetImage(pkt, G_SETTIMG, f, s, w, i);
+}
+
+extern (D) auto gsDPSetTextureImage(T0, T1, T2, T3)(auto ref T0 f, auto ref T1 s, auto ref T2 w, auto ref T3 i)
+{
+    return gsSetImage(G_SETTIMG, f, s, w, i);
+}
 
 /*
  * RDP macros
  */
+
+extern (D) auto GCCc0w0(T0, T1, T2, T3)(auto ref T0 saRGB0, auto ref T1 mRGB0, auto ref T2 saA0, auto ref T3 mA0)
+{
+    return _SHIFTL(saRGB0, 20, 4) | _SHIFTL(mRGB0, 15, 5) | _SHIFTL(saA0, 12, 3) | _SHIFTL(mA0, 9, 3);
+}
+
+extern (D) auto GCCc1w0(T0, T1)(auto ref T0 saRGB1, auto ref T1 mRGB1)
+{
+    return _SHIFTL(saRGB1, 5, 4) | _SHIFTL(mRGB1, 0, 5);
+}
+
+extern (D) auto GCCc0w1(T0, T1, T2, T3)(auto ref T0 sbRGB0, auto ref T1 aRGB0, auto ref T2 sbA0, auto ref T3 aA0)
+{
+    return _SHIFTL(sbRGB0, 28, 4) | _SHIFTL(aRGB0, 15, 3) | _SHIFTL(sbA0, 12, 3) | _SHIFTL(aA0, 9, 3);
+}
+
+extern (D) auto GCCc1w1(T0, T1, T2, T3, T4, T5)(auto ref T0 sbRGB1, auto ref T1 saA1, auto ref T2 mA1, auto ref T3 aRGB1, auto ref T4 sbA1, auto ref T5 aA1)
+{
+    return _SHIFTL(sbRGB1, 24, 4) | _SHIFTL(saA1, 21, 3) | _SHIFTL(mA1, 18, 3) | _SHIFTL(aRGB1, 6, 3) | _SHIFTL(sbA1, 3, 3) | _SHIFTL(aA1, 0, 3);
+}
 
 /*
  * SetCombineMode macros are NOT redunant. It allow the C preprocessor
@@ -1284,6 +2233,73 @@ union Gfx
  *	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0,
  *		TEXEL0, 0, SHADE, 0, TEXEL0, 0, SHADE, 0)
  */
+
+//@@@ D conversion - todo: fix
+//alias gDPSetCombineMode = gDPSetCombineLERP;
+//alias gsDPSetCombineMode = gsDPSetCombineLERP;
+
+extern (D) void gDPSetColor(T)(void* pkt, T c, T d)
+{
+    Gfx *_g = cast(Gfx*) pkt;
+
+    _g.words.w0 = _SHIFTL(c, 24, 8);
+    _g.words.w1 = cast(uint) d;
+}
+
+//extern (D) auto gsDPSetColor(T)(T c, T d)
+//{
+//    return _SHIFTL(c, 24, 8), (unsigned int)(d)
+//}
+
+extern (D) void DPRGBColor(T0, T1, T2, T3, T4, T5)(auto ref T0 pkt, auto ref T1 cmd, auto ref T2 r, auto ref T3 g, auto ref T4 b, auto ref T5 a)
+{
+    gDPSetColor(pkt, cmd, _SHIFTL(r, 24, 8) | _SHIFTL(g, 16, 8) | _SHIFTL(b, 8, 8) | _SHIFTL(a, 0, 8));
+}
+
+//extern (D) auto sDPRGBColor(T0, T1, T2, T3, T4)(auto ref T0 cmd, auto ref T1 r, auto ref T2 g, auto ref T3 b, auto ref T4 a)
+//{
+//    return gsDPSetColor(cmd, _SHIFTL(r, 24, 8) | _SHIFTL(g, 16, 8) | _SHIFTL(b, 8, 8) | _SHIFTL(a, 0, 8));
+//}
+
+extern (D) void gDPSetEnvColor(T0, T1, T2, T3, T4)(auto ref T0 pkt, auto ref T1 r, auto ref T2 g, auto ref T3 b, auto ref T4 a)
+{
+    DPRGBColor(pkt, G_SETENVCOLOR, r, g, b, a);
+}
+
+//extern (D) auto gsDPSetEnvColor(T0, T1, T2, T3)(auto ref T0 r, auto ref T1 g, auto ref T2 b, auto ref T3 a)
+//{
+//    return sDPRGBColor(G_SETENVCOLOR, r, g, b, a);
+//}
+
+//extern (D) auto gDPSetBlendColor(T0, T1, T2, T3, T4)(auto ref T0 pkt, auto ref T1 r, auto ref T2 g, auto ref T3 b, auto ref T4 a)
+//{
+//    return DPRGBColor(pkt, G_SETBLENDCOLOR, r, g, b, a);
+//}
+
+//extern (D) auto gsDPSetBlendColor(T0, T1, T2, T3)(auto ref T0 r, auto ref T1 g, auto ref T2 b, auto ref T3 a)
+//{
+//    return sDPRGBColor(G_SETBLENDCOLOR, r, g, b, a);
+//}
+
+//extern (D) auto gDPSetFogColor(T0, T1, T2, T3, T4)(auto ref T0 pkt, auto ref T1 r, auto ref T2 g, auto ref T3 b, auto ref T4 a)
+//{
+//    return DPRGBColor(pkt, G_SETFOGCOLOR, r, g, b, a);
+//}
+
+//extern (D) auto gsDPSetFogColor(T0, T1, T2, T3)(auto ref T0 r, auto ref T1 g, auto ref T2 b, auto ref T3 a)
+//{
+//    return sDPRGBColor(G_SETFOGCOLOR, r, g, b, a);
+//}
+
+extern (D) void gDPSetFillColor(T0, T1)(auto ref T0 pkt, auto ref T1 d)
+{
+    gDPSetColor(pkt, G_SETFILLCOLOR, d);
+}
+
+//extern (D) auto gsDPSetFillColor(T)(auto ref T d)
+//{
+//    return gsDPSetColor(G_SETFILLCOLOR, d);
+//}
 
 /*
  * gDPSetOtherMode (This is for expert user.)
@@ -1320,6 +2336,26 @@ union Gfx
 
 /* These are also defined defined above for Sprite Microcode */
 
+enum G_TX_LOADTILE = 7;
+enum G_TX_RENDERTILE = 0;
+
+enum G_TX_NOMIRROR = 0;
+enum G_TX_WRAP = 0;
+enum G_TX_MIRROR = 0x1;
+enum G_TX_CLAMP = 0x2;
+enum G_TX_NOMASK = 0;
+enum G_TX_NOLOD = 0;
+
+extern (D) auto MAX(T0, T1)(auto ref T0 a, auto ref T1 b)
+{
+    return a > b ? a : b;
+}
+
+extern (D) auto MIN(T0, T1)(auto ref T0 a, auto ref T1 b)
+{
+    return a < b ? a : b;
+}
+
 /*
  *  Dxt is the inverse of the number of 64-bit words in a line of
  *  the texture being loaded using the load_block command.  If
@@ -1328,6 +2364,7 @@ union Gfx
  *  this.  The 4b macros are a special case since 4-bit textures
  *  are loaded as 8-bit textures.  Dxt is fixed point 1.11. RJM
  */
+enum G_TX_DXT_FRAC = 11;
 
 /*
  *  For RCP 2.0, the maximum number of texels that can be loaded
@@ -1340,7 +2377,48 @@ union Gfx
  *  tile manipulation yourself.  RJM.
  */
 
+enum G_TX_LDBLK_MAX_TXL = 2047;
 /* _HW_VERSION_1 */
+
+extern (D) auto TXL2WORDS(T0, T1)(auto ref T0 txls, auto ref T1 b_txl)
+{
+    return MAX(1, txls * b_txl / 8);
+}
+
+extern (D) auto CALC_DXT(T0, T1)(auto ref T0 width, auto ref T1 b_txl)
+{
+    return ((1 << G_TX_DXT_FRAC) + TXL2WORDS(width, b_txl) - 1) / TXL2WORDS(width, b_txl);
+}
+
+extern (D) auto TXL2WORDS_4b(T)(auto ref T txls)
+{
+    return MAX(1, txls / 16);
+}
+
+extern (D) auto CALC_DXT_4b(T)(auto ref T width)
+{
+    return ((1 << G_TX_DXT_FRAC) + TXL2WORDS_4b(width) - 1) / TXL2WORDS_4b(width);
+}
+
+extern (D) auto gDPSetTileSize(T0, T1, T2, T3, T4, T5)(auto ref T0 pkt, auto ref T1 t, auto ref T2 uls, auto ref T3 ult, auto ref T4 lrs, auto ref T5 lrt)
+{
+    return gDPLoadTileGeneric(pkt, G_SETTILESIZE, t, uls, ult, lrs, lrt);
+}
+
+extern (D) auto gsDPSetTileSize(T0, T1, T2, T3, T4)(auto ref T0 t, auto ref T1 uls, auto ref T2 ult, auto ref T3 lrs, auto ref T4 lrt)
+{
+    return gsDPLoadTileGeneric(G_SETTILESIZE, t, uls, ult, lrs, lrt);
+}
+
+extern (D) auto gDPLoadTile(T0, T1, T2, T3, T4, T5)(auto ref T0 pkt, auto ref T1 t, auto ref T2 uls, auto ref T3 ult, auto ref T4 lrs, auto ref T5 lrt)
+{
+    return gDPLoadTileGeneric(pkt, G_LOADTILE, t, uls, ult, lrs, lrt);
+}
+
+extern (D) auto gsDPLoadTile(T0, T1, T2, T3, T4)(auto ref T0 t, auto ref T1 uls, auto ref T2 ult, auto ref T3 lrs, auto ref T4 lrt)
+{
+    return gsDPLoadTileGeneric(G_LOADTILE, t, uls, ult, lrs, lrt);
+}
 
 /*
  *  For RCP 2.0, the maximum number of texels that can be loaded
@@ -1502,6 +2580,67 @@ union Gfx
 
 /* like gSPTextureRectangle but accepts negative position arguments */
 
-/* _LANGUAGE_C */
+//@@@ D conversion - todo: fix
+//extern (D) auto gDPFullSync(T)(auto ref T pkt)
+//{
+//    return gDPNoParam(pkt, G_RDPFULLSYNC);
+//}
+
+//extern (D) auto gsDPFullSync()
+//{
+//    return gsDPNoParam(G_RDPFULLSYNC);
+//}
+
+//extern (D) auto gDPTileSync(T)(auto ref T pkt)
+//{
+//    return gDPNoParam(pkt, G_RDPTILESYNC);
+//}
+
+//extern (D) auto gsDPTileSync()
+//{
+//    return gsDPNoParam(G_RDPTILESYNC);
+//}
+
+//extern (D) auto gDPPipeSync(T)(auto ref T pkt)
+//{
+//    return gDPNoParam(pkt, G_RDPPIPESYNC);
+//}
+
+//extern (D) auto gsDPPipeSync()
+//{
+//    return gsDPNoParam(G_RDPPIPESYNC);
+//}
+
+//extern (D) auto gDPLoadSync(T)(auto ref T pkt)
+//{
+//    return gDPNoParam(pkt, G_RDPLOADSYNC);
+//}
+
+//extern (D) auto gsDPLoadSync()
+//{
+//    return gsDPNoParam(G_RDPLOADSYNC);
+//}
+
+//extern (D) auto gDPNoOp(T)(auto ref T pkt)
+//{
+//    return gDPNoParam(pkt, G_NOOP);
+//}
+
+//extern (D) auto gsDPNoOp()
+//{
+//    return gsDPNoParam(G_NOOP);
+//}
+
+//extern (D) auto gDPNoOpTag(T0, T1)(auto ref T0 pkt, auto ref T1 tag)
+//{
+//    return gDPParam(pkt, G_NOOP, tag);
+//}
+
+//extern (D) auto gsDPNoOpTag(T)(auto ref T tag)
+//{
+//    return gsDPParam(G_NOOP, tag);
+//}
+
+// #endif /* _LANGUAGE_C */
 
 /* _GBI_H_ */
