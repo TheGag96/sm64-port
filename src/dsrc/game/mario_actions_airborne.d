@@ -445,7 +445,9 @@ s32 act_jump(MarioState* m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
-    if (m.input & INPUT_ANALOG_SPIN) {
+    //extra checks are needed here to prevent an infinite loop from spin jump cancelling back into jump repeatedly
+    //see the beginning of set_mario_action_airborne
+    if (m.input & INPUT_ANALOG_SPIN && m.squishTimer == 0 && m.quicksandDepth < 1.0f) {
         return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
