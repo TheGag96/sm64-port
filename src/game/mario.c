@@ -1394,7 +1394,7 @@ void update_mario_joystick_inputs(struct MarioState *m) {
 
         angleOverFrames += thisFrameDelta;
 
-        if (angleOverFrames >= 0x9000) {
+        if (angleOverFrames >= 0xA000) {
             m->spinBufferTimer = SPIN_TIMER_SUCCESSFUL_INPUT;
         }
 
