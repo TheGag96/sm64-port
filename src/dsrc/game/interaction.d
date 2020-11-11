@@ -254,13 +254,11 @@ u32 determine_interaction(MarioState* m, Object_* o) {
                     interaction = INT_TRIP;
                 }
             }
-        } else if (action == ACT_GROUND_POUND || action == ACT_TWIRLING || action == ACT_SPIN_POUND ||
-                   action == ACT_WATER_GROUND_POUND) {
+        } else if (action == ACT_GROUND_POUND || action == ACT_TWIRLING) {
             if (m.vel[1] < 0.0f) {
                 interaction = INT_GROUND_POUND_OR_TWIRL;
             }
-        } else if (action == ACT_GROUND_POUND_LAND || action == ACT_TWIRL_LAND || action == ACT_SPIN_POUND_LAND ||
-                   action == ACT_WATER_GROUND_POUND_LAND) {
+        } else if (action == ACT_GROUND_POUND_LAND || action == ACT_TWIRL_LAND) {
             // Neither ground pounding nor twirling change Mario's vertical speed on landing.,
             // so the speed check is nearly always true (perhaps not if you land while going upwards?)
             // Additionally, actionState it set on each first thing in their action, so this is
