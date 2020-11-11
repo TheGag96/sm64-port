@@ -217,7 +217,9 @@ void update_air_without_turn(MarioState* m) {
             intendedMag = m.intendedMag / 32.0f;
 
             m.forwardVel += intendedMag * coss(intendedDYaw) * 1.5f;
-            sidewaysSpeed = intendedMag * sins(intendedDYaw) * 10.0f;
+            if (m.action != ACT_ROLL_AIR) {
+                sidewaysSpeed = intendedMag * sins(intendedDYaw) * 10.0f;
+            }
         }
 
         //! Uncapped air speed. Net positive when moving forward.
@@ -443,6 +445,12 @@ s32 act_jump(MarioState* m) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
     }
 
+    //extra checks are needed here to prevent an infinite loop from spin jump cancelling back into jump repeatedly
+    //see the beginning of set_mario_action_airborne
+    if (m.input & INPUT_ANALOG_SPIN && m.squishTimer == 0 && m.quicksandDepth < 1.0f) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
+    }
+
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
     common_air_action_step(m, ACT_JUMP_LAND, MARIO_ANIM_SINGLE_JUMP,
                            AIR_STEP_CHECK_LEDGE_GRAB | AIR_STEP_CHECK_HANG);
@@ -460,6 +468,10 @@ s32 act_double_jump(MarioState* m) {
 
     if (m.input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m.input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_HOOHOO);
@@ -501,6 +513,10 @@ else {
 s32 act_backflip(MarioState* m) {
     if (m.input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m.input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAH_WAH_HOO);
@@ -591,7 +607,12 @@ s32 act_side_flip(MarioState* m) {
     }
 
     if (m.input & INPUT_Z_PRESSED) {
+        m.marioObj.header.gfx.angle[1] -= 0x8000;
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m.input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
@@ -615,6 +636,10 @@ s32 act_wall_kick_air(MarioState* m) {
 
     if (m.input & INPUT_Z_PRESSED) {
         return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m.input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
     }
 
     play_mario_jump_sound(m);
@@ -680,6 +705,10 @@ s32 act_twirling(MarioState* m) {
         yawVelTarget = 0x2000;
     } else {
         yawVelTarget = 0x1800;
+    }
+
+    if (m.vel[1] < 0.0f && m.input & INPUT_Z_PRESSED) {
+        return set_mario_action(m, ACT_SPIN_POUND, 0);
     }
 
     m.angleVel[1] = cast(s16) (approach_s32(m.angleVel[1], yawVelTarget, 0x200, 0x200));
@@ -852,6 +881,12 @@ s32 act_water_jump(MarioState* m) {
         default: break;
     }
 
+    if (m.prevAction == ACT_WATER_GROUND_POUND_JUMP) {
+        // maintain spinning from water ground pound jump anim
+        m.spareFloat += (0x10000*1.0f - m.spareFloat) / 5.0f;
+        m.marioObj.header.gfx.angle[1] -= cast(s16) m.spareFloat;
+    }
+
     return false;
 }
 
@@ -949,6 +984,12 @@ s32 act_ground_pound(MarioState* m) {
             play_sound(SOUND_MARIO_GROUND_POUND_WAH, m.marioObj.header.gfx.cameraToObject.ptr);
             m.actionState = 1;
         }
+
+        if (m.input & INPUT_B_PRESSED) {
+            mario_set_forward_vel(m, 10.0f);
+            m.vel[1] = 35;
+            set_mario_action(m, ACT_DIVE, 0);
+        }
     } else {
         set_mario_animation(m, MARIO_ANIM_GROUND_POUND);
 
@@ -981,6 +1022,12 @@ s32 act_ground_pound(MarioState* m) {
 
             m.particleFlags |= PARTICLE_VERTICAL_STAR;
             set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
+        } else {
+            if (m.input & INPUT_B_PRESSED) {
+                mario_set_forward_vel(m, 10.0f);
+                m.vel[1] = 35;
+                set_mario_action(m, ACT_DIVE, 0);
+            }
         }
     }
 
@@ -1323,12 +1370,10 @@ s32 act_air_hit_wall(MarioState* m) {
         mario_drop_held_object(m);
     }
 
-    if (++(m.actionTimer) <= 2) {
-        if (m.input & INPUT_A_PRESSED) {
-            m.vel[1] = 52.0f;
-            m.faceAngle[1] += 0x8000;
-            return set_mario_action(m, ACT_WALL_KICK_AIR, 0);
-        }
+    if (++(m.actionTimer) <= 1 && m.input & INPUT_A_PRESSED) {
+        m.vel[1] = 52.0f;
+        m.faceAngle[1] += 0x8000;
+        return set_mario_action(m, ACT_WALL_KICK_AIR, 0);
     } else if (m.forwardVel >= 38.0f) {
         m.wallKickTimer = 5;
         if (m.vel[1] > 0.0f) {
@@ -1338,15 +1383,8 @@ s32 act_air_hit_wall(MarioState* m) {
         m.particleFlags |= PARTICLE_VERTICAL_STAR;
         return set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
     } else {
-        m.wallKickTimer = 5;
-        if (m.vel[1] > 0.0f) {
-            m.vel[1] = 0.0f;
-        }
-
-        if (m.forwardVel > 8.0f) {
-            mario_set_forward_vel(m, -8.0f);
-        }
-        return set_mario_action(m, ACT_SOFT_BONK, 0);
+        m.faceAngle[1] += 0x8000;
+        return set_mario_action(m, ACT_WALL_SLIDE, 0);
     }
 
     return set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
@@ -1357,6 +1395,40 @@ s32 act_air_hit_wall(MarioState* m) {
     // execute on two frames, but instead it executes twice on the same frame.
     // This results in firsties only being possible for a single frame, instead
     // of two.
+}
+
+s32 act_wall_slide(MarioState* m) {
+    if (m.input & INPUT_A_PRESSED) {
+        m.vel[1] = 52.0f;
+        // m.faceAngle[1] += 0x8000;
+        return set_mario_action(m, ACT_WALL_KICK_AIR, 0);
+    }
+
+    // attempt to stick to the wall a bit. if it's 0, sometimes you'll get kicked off of slightly sloped walls
+    mario_set_forward_vel(m, -1.0f);
+
+    m.particleFlags |= PARTICLE_DUST;
+
+    play_sound(SOUND_MOVING_TERRAIN_SLIDE + m.terrainSoundAddend, m.marioObj.header.gfx.cameraToObject.ptr);
+    set_mario_animation(m, MARIO_ANIM_START_WALLKICK);
+
+    switch (perform_air_step(m, 0)) {
+        case AIR_STEP_LANDED:
+            mario_set_forward_vel(m, 0.0f);
+            if (!check_fall_damage_or_get_stuck(m, ACT_HARD_BACKWARD_GROUND_KB)) {
+                return set_mario_action(m, ACT_FREEFALL_LAND, 0);
+            }
+            break;
+
+        default: break;
+    }
+
+    if (m.wall == null) {
+        mario_set_forward_vel(m, 0.0f);
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+
+    return false;
 }
 
 s32 act_forward_rollout(MarioState* m) {
@@ -2076,6 +2148,253 @@ s32 act_special_triple_jump(MarioState* m) {
     return false;
 }
 
+s32 act_ground_pound_jump(MarioState* m) {
+    if (check_kick_or_dive_in_air(m)) {
+        m.marioObj.header.gfx.angle[1] += cast(s16) m.spareFloat;
+        return true;
+    }
+
+    if (m.input & INPUT_Z_PRESSED) {
+        m.marioObj.header.gfx.angle[1] += cast(s16) m.spareFloat;
+        return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
+    if (m.input & INPUT_ANALOG_SPIN) {
+        return set_mario_action(m, ACT_SPIN_JUMP, 1);
+    }
+
+    if (m.actionTimer == 0) {
+        m.spareFloat = 0;
+    }
+    else if (m.actionTimer == 1) {
+        play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
+    }
+
+    play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAHOO);
+
+    common_air_action_step(m, ACT_JUMP_LAND, MARIO_ANIM_SINGLE_JUMP,
+                           AIR_STEP_CHECK_LEDGE_GRAB | AIR_STEP_CHECK_HANG);
+
+    m.spareFloat += (0x10000*1.0f - m.spareFloat) / 5.0f;
+    m.marioObj.header.gfx.angle[1] -= cast(s16) m.spareFloat;
+
+    m.actionTimer++;
+
+    return false;
+}
+
+s32 act_roll_air(MarioState* m) {
+    enum MAX_NORMAL_ROLL_SPEED        = 50.0f;
+    enum ROLL_AIR_CANCEL_LOCKOUT_TIME = 15;
+
+    if (m.actionTimer == 0) {
+        if (m.prevAction != ACT_ROLL) {
+            m.spareFloat = 0;
+            m.spareInt   = 0;
+        }
+    }
+
+    if (!(m.input & INPUT_Z_DOWN) && m.actionTimer >= ROLL_AIR_CANCEL_LOCKOUT_TIME) {
+        return set_mario_action(m, ACT_FREEFALL, 0);
+    }
+
+    set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
+
+    switch (perform_air_step(m, 0)) {
+        case AIR_STEP_LANDED:
+            if (!check_fall_damage_or_get_stuck(m, ACT_HARD_BACKWARD_GROUND_KB)) {
+                play_sound_and_spawn_particles(m, SOUND_ACTION_TERRAIN_STEP, 0);
+                return set_mario_action(m, ACT_ROLL, m.actionArg);
+            }
+            break;
+
+        case AIR_STEP_HIT_WALL:
+            version (SM64_SH) {
+                queue_rumble_data(5, 40);
+            }
+            mario_bonk_reflection(m, false);
+            m.faceAngle[1] += 0x8000;
+
+            if (m.vel[1] > 0.0f) {
+                m.vel[1] = 0.0f;
+            }
+
+            m.particleFlags |= PARTICLE_VERTICAL_STAR;
+            return set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
+            break;
+
+        default: break;
+    }
+
+    m.spareFloat += 0x80 * m.forwardVel;
+    if (m.spareFloat > 0x10000) m.spareFloat -= 0x10000;
+    set_anim_to_frame(m, cast(s16) (10 * m.spareFloat / 0x10000));
+
+    m.spareInt++;
+    m.actionTimer++;
+
+    return false;
+}
+
+s32 act_spin_jump(MarioState* m) {
+    f32 spinDirFactor;
+
+    if (m.actionTimer == 0) {
+        // determine clockwise/counter-clockwise spin
+        if (m.spinDirection < 0) {
+            m.actionState = 1;
+        }
+    }
+    else if (m.actionTimer == 1 || m.actionTimer == 4) {
+        play_sound(SOUND_ACTION_TWIRL, m.marioObj.header.gfx.cameraToObject.ptr);
+    }
+
+    spinDirFactor = (m.actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
+
+    if (m.input & INPUT_B_PRESSED) {
+        return set_mario_action(m, ACT_DIVE, 0);
+    }
+
+    if (m.input & INPUT_Z_PRESSED) {
+        play_sound(SOUND_ACTION_TWIRL, m.marioObj.header.gfx.cameraToObject.ptr);
+
+        m.vel[1] = -50.0f;
+        mario_set_forward_vel(m, 0.0f);
+
+        // choose which direction to be facing on land (practically random if no input)
+        if (m.input & INPUT_NONZERO_ANALOG) {
+            m.faceAngle[1] = m.intendedYaw;
+        }
+        else {
+            m.faceAngle[1] = cast(s16) m.spareFloat;
+        }
+
+        return set_mario_action(m, ACT_SPIN_POUND, m.actionState);
+    }
+
+    play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, SOUND_MARIO_YAHOO);
+
+    common_air_action_step(m, ACT_DOUBLE_JUMP_LAND, MARIO_ANIM_TWIRL,
+                           AIR_STEP_CHECK_HANG);
+
+    m.spareFloat += 0x2867;
+    if (m.spareFloat >  0x10000) m.spareFloat -= 0x10000;
+    if (m.spareFloat < -0x10000) m.spareFloat += 0x10000;
+    m.marioObj.header.gfx.angle[1] += cast(s16) (m.spareFloat * spinDirFactor);
+
+    m.actionTimer++;
+
+    return false;
+}
+
+s32 act_spin_pound(MarioState* m) {
+    u32 stepResult;
+    f32 spinDirFactor;
+
+    if (m.actionTimer == 0) {
+        m.actionState = cast(u16) m.actionArg;
+    }
+
+    spinDirFactor = (m.actionState == 1 ? -1 : 1);  // negative for clockwise, positive for counter-clockwise
+
+    set_mario_animation(m, MARIO_ANIM_TWIRL);
+
+    if (m.input & INPUT_B_PRESSED) {
+        mario_set_forward_vel(m, 10.0f);
+        m.vel[1] = 35;
+        set_mario_action(m, ACT_DIVE, 0);
+    }
+
+    stepResult = perform_air_step(m, 0);
+    if (stepResult == AIR_STEP_LANDED) {
+        if (should_get_stuck_in_ground(m)) {
+            version (SM64_SH) {
+                queue_rumble_data(5, 80);
+            }
+            version (SM64_JP) {
+                play_sound(SOUND_MARIO_OOOF, m.marioObj.header.gfx.cameraToObject.ptr);
+            } else {
+                play_sound(SOUND_MARIO_OOOF2, m.marioObj.header.gfx.cameraToObject.ptr);
+            }
+            m.particleFlags |= PARTICLE_MIST_CIRCLE;
+            set_mario_action(m, ACT_BUTT_STUCK_IN_GROUND, 0);
+        } else {
+            play_mario_heavy_landing_sound(m, SOUND_ACTION_TERRAIN_HEAVY_LANDING);
+            if (!check_fall_damage(m, ACT_HARD_BACKWARD_GROUND_KB)) {
+                m.particleFlags |= PARTICLE_MIST_CIRCLE | PARTICLE_HORIZONTAL_STAR;
+                set_mario_action(m, ACT_SPIN_POUND_LAND, 0);
+            }
+        }
+        set_camera_shake_from_hit(SHAKE_GROUND_POUND);
+    } else if (stepResult == AIR_STEP_HIT_WALL) {
+        mario_set_forward_vel(m, -16.0f);
+        if (m.vel[1] > 0.0f) {
+            m.vel[1] = 0.0f;
+        }
+
+        m.particleFlags |= PARTICLE_VERTICAL_STAR;
+        set_mario_action(m, ACT_BACKWARD_AIR_KB, 0);
+    }
+
+    m.spareFloat += 0x3053;
+    if (m.spareFloat >  0x10000) m.spareFloat -= 0x10000;
+    if (m.spareFloat < -0x10000) m.spareFloat += 0x10000;
+    m.marioObj.header.gfx.angle[1] += cast(s16) (m.spareFloat * spinDirFactor);
+
+    m.actionTimer++;
+
+    return false;
+}
+
+
+s32 act_ledge_parkour(MarioState* m) {
+    s16 animFrame;
+
+    set_mario_animation(m, MARIO_ANIM_SLIDEFLIP);
+
+    animFrame = m.marioObj.header.gfx.animInfo.animFrame;
+
+    if (m.actionTimer == 0)      play_sound(SOUND_MARIO_HAHA_2, m.marioObj.header.gfx.cameraToObject.ptr);
+    else if (m.actionTimer == 1) play_sound(SOUND_ACTION_SIDE_FLIP_UNK, m.marioObj.header.gfx.cameraToObject.ptr);
+
+    update_air_without_turn(m);
+
+    switch (perform_air_step(m, AIR_STEP_CHECK_LEDGE_GRAB)) {
+        case AIR_STEP_NONE:
+            // play the side flip animation at double speed for a portion of it
+            if      (animFrame < 15) animFrame += 2;
+            else if (animFrame > 23) animFrame = 23;
+            else                     animFrame++;
+
+            set_anim_to_frame(m, animFrame);
+            m.marioObj.header.gfx.angle[1] += 0x8000;
+            break;
+
+        case AIR_STEP_LANDED:
+            m.marioObj.header.gfx.angle[1] += 0x8000;
+            set_mario_action(m, ACT_FREEFALL_LAND_STOP, 0);
+            play_mario_landing_sound(m, SOUND_ACTION_TERRAIN_LANDING);
+            break;
+
+        case AIR_STEP_HIT_WALL:
+            m.marioObj.header.gfx.angle[1] += 0x8000;
+            mario_set_forward_vel(m, 0.0f);
+            break;
+
+        case AIR_STEP_HIT_LAVA_WALL:
+            m.marioObj.header.gfx.angle[1] += 0x8000;
+            lava_boost_on_wall(m);
+            break;
+
+        default: break;
+    }
+
+    m.actionTimer++;
+
+    return false;
+}
+
+
 s32 check_common_airborne_cancels(MarioState* m) {
     if (m.pos[1] < m.waterLevel - 100) {
         return set_water_plunge_action(m);
@@ -2123,6 +2442,7 @@ s32 mario_execute_airborne_action(MarioState* m) {
         case ACT_RIDING_SHELL_JUMP:
         case ACT_RIDING_SHELL_FALL:    cancel = act_riding_shell_air(m);     break;
         case ACT_DIVE:                 cancel = act_dive(m);                 break;
+        case ACT_SPIN_JUMP:            cancel = act_spin_jump(m);            break;
         case ACT_AIR_THROW:            cancel = act_air_throw(m);            break;
         case ACT_BACKWARD_AIR_KB:      cancel = act_backward_air_kb(m);      break;
         case ACT_FORWARD_AIR_KB:       cancel = act_forward_air_kb(m);       break;
@@ -2133,6 +2453,7 @@ s32 mario_execute_airborne_action(MarioState* m) {
         case ACT_FORWARD_ROLLOUT:      cancel = act_forward_rollout(m);      break;
         case ACT_SHOT_FROM_CANNON:     cancel = act_shot_from_cannon(m);     break;
         case ACT_BUTT_SLIDE_AIR:       cancel = act_butt_slide_air(m);       break;
+        case ACT_SPIN_POUND:           cancel = act_spin_pound(m);           break;
         case ACT_HOLD_BUTT_SLIDE_AIR:  cancel = act_hold_butt_slide_air(m);  break;
         case ACT_LAVA_BOOST:           cancel = act_lava_boost(m);           break;
         case ACT_GETTING_BLOWN:        cancel = act_getting_blown(m);        break;
@@ -2149,6 +2470,10 @@ s32 mario_execute_airborne_action(MarioState* m) {
         case ACT_RIDING_HOOT:          cancel = act_riding_hoot(m);          break;
         case ACT_TOP_OF_POLE_JUMP:     cancel = act_top_of_pole_jump(m);     break;
         case ACT_VERTICAL_WIND:        cancel = act_vertical_wind(m);        break;
+        case ACT_WALL_SLIDE:           cancel = act_wall_slide(m);           break;
+        case ACT_GROUND_POUND_JUMP:    cancel = act_ground_pound_jump(m);    break;
+        case ACT_ROLL_AIR:             cancel = act_roll_air(m);             break;
+        case ACT_LEDGE_PARKOUR:        cancel = act_ledge_parkour(m);        break;
         default:                                                             break;
     }
     /* clang-format on */

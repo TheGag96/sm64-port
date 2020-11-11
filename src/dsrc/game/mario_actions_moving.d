@@ -145,7 +145,12 @@ s32 set_triple_jump_action(MarioState* m, u32 action, u32 actionArg) {
     } else if (m.forwardVel > 20.0f) {
         return set_mario_action(m, ACT_TRIPLE_JUMP, 0);
     } else {
-        return set_mario_action(m, ACT_JUMP, 0);
+        if (m.input & INPUT_ANALOG_SPIN) {
+            return set_mario_action(m, ACT_SPIN_JUMP, 0);
+        }
+        else {
+            return set_mario_action(m, ACT_JUMP, 0);
+        }
     }
 
     return false;
@@ -178,7 +183,7 @@ void update_sliding_angle(MarioState* m, f32 accel, f32 lossFactor) {
         if ((newFacingDYaw -= 0x200) < 0) {
             newFacingDYaw = 0;
         }
-    } else if (newFacingDYaw > -0x4000 && newFacingDYaw < 0) {
+    } else if (newFacingDYaw >= -0x4000 && newFacingDYaw < 0) {
         if ((newFacingDYaw += 0x200) > 0) {
             newFacingDYaw = 0;
         }
@@ -210,6 +215,10 @@ void update_sliding_angle(MarioState* m, f32 accel, f32 lossFactor) {
 
     if (newFacingDYaw < -0x4000 || newFacingDYaw > 0x4000) {
         m.forwardVel *= -1.0f;
+
+        if (m.action == ACT_ROLL) {
+            m.faceAngle[1] += 0x4000;
+        }
     }
 }
 
@@ -220,6 +229,9 @@ s32 update_sliding(MarioState* m, f32 stopSpeed) {
     f32 accel;
     f32 oldSpeed;
     f32 newSpeed;
+    f32 angleChange;
+    f32 modSlideVelX;
+    f32 modSlideVelZ;
 
     s32 stopped = false;
 
@@ -232,35 +244,45 @@ s32 update_sliding(MarioState* m, f32 stopSpeed) {
         forward *= 0.5f + 0.5f * m.forwardVel / 100.0f;
     }
 
-    switch (mario_get_floor_class(m)) {
-        case SURFACE_CLASS_VERY_SLIPPERY:
-            accel = 10.0f;
-            lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.98f;
-            break;
+    if (m.action == ACT_ROLL) {
+        accel = 4.0f;
+        lossFactor = 0.994f;
+    }
+    else {
+        switch (mario_get_floor_class(m)) {
+            case SURFACE_CLASS_VERY_SLIPPERY:
+                accel = 10.0f;
+                lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.98f;
+                break;
 
-        case SURFACE_CLASS_SLIPPERY:
-            accel = 8.0f;
-            lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.96f;
-            break;
+            case SURFACE_CLASS_SLIPPERY:
+                accel = 8.0f;
+                lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.96f;
+                break;
 
-        default:
-            accel = 7.0f;
-            lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.92f;
-            break;
+            default:
+                accel = 7.0f;
+                lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.92f;
+                break;
 
-        case SURFACE_CLASS_NOT_SLIPPERY:
-            accel = 5.0f;
-            lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.92f;
-            break;
+            case SURFACE_CLASS_NOT_SLIPPERY:
+                accel = 5.0f;
+                lossFactor = m.intendedMag / 32.0f * forward * 0.02f + 0.92f;
+                break;
+        }
     }
 
     oldSpeed = sqrt(m.slideVelX * m.slideVelX + m.slideVelZ * m.slideVelZ);
 
-    //! This is attempting to use trig derivatives to rotate Mario's speed.
-    // It is slightly off/asymmetric since it uses the new X speed, but the old
-    // Z speed.
-    m.slideVelX += m.slideVelZ * (m.intendedMag / 32.0f) * sideward * 0.05f;
-    m.slideVelZ -= m.slideVelX * (m.intendedMag / 32.0f) * sideward * 0.05f;
+    //! This is uses trig derivatives to rotate Mario's speed.
+    // In vanilla, it was slightly off/asymmetric since it uses the new X speed, but the old
+    // Z speed. I've gone and fixed it here.
+    angleChange  = (m.intendedMag / 32.0f) * (m.action == ACT_ROLL ? 0.6f : 1.0f),
+    modSlideVelX = m.slideVelZ * angleChange * sideward * 0.05f,
+    modSlideVelZ = m.slideVelX * angleChange * sideward * 0.05f;
+
+    m.slideVelX += modSlideVelX;
+    m.slideVelZ -= modSlideVelZ;
 
     newSpeed = sqrt(m.slideVelX * m.slideVelX + m.slideVelZ * m.slideVelZ);
 
@@ -435,6 +457,9 @@ s32 update_decelerating_speed(MarioState* m) {
 void update_walking_speed(MarioState* m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
+    f32 firmSpeedCap = m.prevAction == ACT_ROLL ? 60.0f : 48.0f;
+    f32 hardSpeedCap = 105;
+    f32 decayFactor;
 
     if (m.floor != null && m.floor.type == SURFACE_SLOW) {
         maxTargetSpeed = 24.0f;
@@ -448,21 +473,37 @@ void update_walking_speed(MarioState* m) {
         targetSpeed *= 6.25 / m.quicksandDepth;
     }
 
+    // instead of a hard walk speed cap, going over this new firm speed cap makes you slow down to it twice as fast
+    decayFactor = m.forwardVel > firmSpeedCap ? 2.0f : 1.0f;
+
     if (m.forwardVel <= 0.0f) {
         m.forwardVel += 1.1f;
     } else if (m.forwardVel <= targetSpeed) {
         m.forwardVel += 1.1f - m.forwardVel / 43.0f;
     } else if (m.floor.normal.y >= 0.95f) {
-        m.forwardVel -= 1.0f;
+        m.forwardVel -= decayFactor;
+    } else {
+        // reintroduce the old hardcap for the weird slopes where you kind of just maintain your speed
+        if (m.forwardVel > firmSpeedCap) {
+            m.forwardVel = firmSpeedCap;
+        }
     }
 
     // still keep a high hard cap as a failsafe
-    if (m.forwardVel > 48.0f) {
-        m.forwardVel = 48.0f;
+    if (m.forwardVel > hardSpeedCap) {
+        m.forwardVel = hardSpeedCap;
     }
 
-    m.faceAngle[1] =
-        cast(s16) (m.intendedYaw - approach_s32(cast(s16)(m.intendedYaw - m.faceAngle[1]), 0, 0x800, 0x800));
+    if (analog_stick_held_back(m)) {
+        m.faceAngle[1] = m.intendedYaw;
+
+        if (m.forwardVel < 0) {
+            mario_set_forward_vel(m, -m.forwardVel);
+        }
+    } else {
+        m.faceAngle[1] =
+            cast(s16) (m.intendedYaw - approach_s32(cast(s16)(m.intendedYaw - m.faceAngle[1]), 0, 0xC00, 0xC00));
+    }
     apply_slope_accel(m);
 }
 
@@ -809,7 +850,7 @@ s32 act_walking(MarioState* m) {
         return begin_braking_action(m);
     }
 
-    if (analog_stick_held_back(m) && m.forwardVel >= 16.0f) {
+    if (analog_stick_held_back(m) && m.forwardVel >= 12.0f) {
         return set_mario_action(m, ACT_TURNING_AROUND, 0);
     }
 
@@ -982,7 +1023,12 @@ s32 act_turning_around(MarioState* m) {
     }
 
     if (m.input & INPUT_A_PRESSED) {
-        return set_jumping_action(m, ACT_SIDE_FLIP, 0);
+        if (m.input & INPUT_ANALOG_SPIN) {
+            return set_jumping_action(m, ACT_SPIN_JUMP, 0);
+        }
+        else {
+            return set_jumping_action(m, ACT_SIDE_FLIP, 0);
+        }
     }
 
     if (m.input & INPUT_UNKNOWN_5) {
@@ -1035,7 +1081,12 @@ s32 act_finish_turning_around(MarioState* m) {
     }
 
     if (m.input & INPUT_A_PRESSED) {
-        return set_jumping_action(m, ACT_SIDE_FLIP, 0);
+        if (m.input & INPUT_ANALOG_SPIN) {
+            return set_jumping_action(m, ACT_SPIN_JUMP, 0);
+        }
+        else {
+            return set_jumping_action(m, ACT_SIDE_FLIP, 0);
+        }
     }
 
     update_walking_speed(m);
@@ -1515,6 +1566,14 @@ s32 act_crouch_slide(MarioState* m) {
         return set_mario_action(m, ACT_BRAKING, 0);
     }
 
+    if (m.controller.buttonPressed & R_TRIG) {
+        m.vel[1] = 19.0f;
+        mario_set_forward_vel(m, max(32, m.forwardVel));
+        play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
+        play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
+        return set_mario_action(m, ACT_ROLL_AIR, 0);
+    }
+
     cancel = common_slide_action_with_jump(m, ACT_CROUCHING, ACT_JUMP, ACT_FREEFALL,
                                            MARIO_ANIM_START_CROUCHING);
     return cancel;
@@ -1550,6 +1609,79 @@ s32 act_slide_kick_slide(MarioState* m) {
 
     play_sound(SOUND_MOVING_TERRAIN_SLIDE + m.terrainSoundAddend, m.marioObj.header.gfx.cameraToObject.ptr);
     m.particleFlags |= PARTICLE_DUST;
+    return false;
+}
+
+s32 act_roll(MarioState* m) {
+    enum MAX_NORMAL_ROLL_SPEED    = 50.0f;
+    enum ROLL_BOOST_GAIN          = 10.0f;
+    enum ROLL_CANCEL_LOCKOUT_TIME = 10;
+    enum BOOST_LOCKOUT_TIME       = 20;
+
+    //m.spareFloat  is used for Mario's rotation angle during the roll (persists when going into ACT_ROLL_AIR and back)
+    //m.spareInt    is used for the boost lockout timer (persists when going into ACT_ROLL_AIR and back)
+    //m.actionTimer is used to lockout walk canceling out of rollout (reset each action switch)
+
+    if (m.actionTimer == 0) {
+        if (m.prevAction != ACT_ROLL_AIR) {
+            m.spareFloat = 0;
+            m.spareInt   = 0;
+        }
+    }
+    else if (m.actionTimer >= ROLL_CANCEL_LOCKOUT_TIME || m.actionArg == 1) {
+        if (!(m.input & INPUT_Z_DOWN))
+            return set_mario_action(m, ACT_WALKING, 0);
+    }
+
+    if (m.input & INPUT_B_PRESSED){
+        version (SM64_SH) {
+            queue_rumble_data(5, 80);
+        }
+        return set_jumping_action(m, ACT_FORWARD_ROLLOUT, 0);
+    }
+
+    if (m.input & INPUT_A_PRESSED)
+        return set_jumping_action(m, ACT_LONG_JUMP, 0);
+
+    if (m.controller.buttonPressed & R_TRIG && m.actionTimer > 0) {
+        m.vel[1] = 19.0f;
+        play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
+
+        if (m.spareInt >= BOOST_LOCKOUT_TIME) {
+            m.spareInt = 0;
+
+            if (m.forwardVel < MAX_NORMAL_ROLL_SPEED) {
+                mario_set_forward_vel(m, min(m.forwardVel + ROLL_BOOST_GAIN, MAX_NORMAL_ROLL_SPEED));
+            }
+
+            m.particleFlags |= PARTICLE_HORIZONTAL_STAR;
+
+            //! playing this after the call to play_mario_sound seems to matter in making this sound play
+            play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
+        }
+
+        return set_mario_action(m, ACT_ROLL_AIR, m.actionArg);
+    }
+
+    set_mario_animation(m, MARIO_ANIM_FORWARD_SPINNING);
+
+    if (update_sliding(m, 10.0f))
+        return set_mario_action(m, ACT_CROUCH_SLIDE, 0);
+
+    common_slide_action(m, ACT_CROUCH_SLIDE, ACT_ROLL_AIR, MARIO_ANIM_FORWARD_SPINNING);
+
+    m.spareFloat += 0x80 * m.forwardVel;
+    if (m.spareFloat > 0x10000) m.spareFloat -= 0x10000;
+    set_anim_to_frame(m, cast(s16) (10 * m.spareFloat / 0x10000));
+
+    m.spareInt++;
+
+    // if (m.forwardVel > MAX_NORMAL_ROLL_SPEED) {
+    //     mario_set_forward_vel(m, MAX_NORMAL_ROLL_SPEED);
+    // }
+
+    m.actionTimer++;
+
     return false;
 }
 
@@ -1591,7 +1723,7 @@ s32 act_hold_stomach_slide(MarioState* m) {
 }
 
 s32 act_dive_slide(MarioState* m) {
-    if (!(m.input & INPUT_ABOVE_SLIDE) && (m.input & (INPUT_A_PRESSED | INPUT_B_PRESSED))) {
+    if (!(m.input & INPUT_ABOVE_SLIDE) && (m.input & INPUT_A_PRESSED)) {
         version (SM64_SH) {
             queue_rumble_data(5, 80);
         }
@@ -1600,6 +1732,17 @@ s32 act_dive_slide(MarioState* m) {
     }
 
     play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_BODY_HIT_GROUND);
+
+    if (!(m.input & INPUT_ABOVE_SLIDE)) {
+        if (m.input & INPUT_Z_DOWN && m.actionTimer == 0) {
+            return set_mario_action(m, ACT_ROLL, 1);
+        }
+        else if (m.input & INPUT_B_PRESSED) {
+            //dive hop
+            m.vel[1] = 21.0f;
+            return set_mario_action(m, ACT_DIVE, 1);
+        }
+    }
 
     //! If the dive slide ends on the same frame that we pick up on object,
     // Mario will not be in the dive slide action for the call to
@@ -1618,6 +1761,8 @@ s32 act_dive_slide(MarioState* m) {
     }
 
     common_slide_action(m, ACT_STOMACH_SLIDE_STOP, ACT_FREEFALL, MARIO_ANIM_DIVE);
+
+    m.actionTimer++;
 
     return false;
 }
@@ -1894,6 +2039,10 @@ s32 act_long_jump_land(MarioState* m) {
     if (!(m.input & INPUT_Z_DOWN)) {
         m.input &= ~INPUT_A_PRESSED;
     }
+    else if (m.forwardVel > 15.0f && m.actionTimer == 0) {
+        play_mario_landing_sound_once(m, SOUND_ACTION_TERRAIN_LANDING);
+        return set_mario_action(m, ACT_ROLL, 1);
+    }
 
     if (common_landing_cancels(m, &sLongJumpLandAction, &set_jumping_action)) {
         return true;
@@ -2044,6 +2193,7 @@ s32 mario_execute_moving_action(MarioState* m) {
         case ACT_MOVE_PUNCHING:            cancel = act_move_punching(m);            break;
         case ACT_CROUCH_SLIDE:             cancel = act_crouch_slide(m);             break;
         case ACT_SLIDE_KICK_SLIDE:         cancel = act_slide_kick_slide(m);         break;
+        case ACT_ROLL:                     cancel = act_roll(m);                     break;
         case ACT_HARD_BACKWARD_GROUND_KB:  cancel = act_hard_backward_ground_kb(m);  break;
         case ACT_HARD_FORWARD_GROUND_KB:   cancel = act_hard_forward_ground_kb(m);   break;
         case ACT_BACKWARD_GROUND_KB:       cancel = act_backward_ground_kb(m);       break;

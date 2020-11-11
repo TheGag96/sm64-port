@@ -561,6 +561,14 @@ s32 act_crouching(MarioState* m) {
         return set_mario_action(m, ACT_PUNCHING, 9);
     }
 
+    if (m.controller.buttonPressed & R_TRIG) {
+        m.vel[1] = 19.0f;
+        mario_set_forward_vel(m, 32.0f);
+        play_mario_sound(m, SOUND_ACTION_TERRAIN_JUMP, 0);
+        play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
+        return set_mario_action(m, ACT_ROLL_AIR, 0);
+    }
+
     stationary_ground_step(m);
     set_mario_animation(m, MARIO_ANIM_CROUCHING);
     return false;
@@ -1051,6 +1059,16 @@ s32 act_ground_pound_land(MarioState* m) {
         return set_mario_action(m, ACT_BUTT_SLIDE, 0);
     }
 
+    if (m.input & INPUT_A_PRESSED) {
+        return set_jumping_action(m, ACT_GROUND_POUND_JUMP, 0);
+    }
+
+    if (m.controller.buttonPressed & R_TRIG) {
+        mario_set_forward_vel(m, 60);
+        play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
+        return set_mario_action(m, ACT_ROLL, 0);
+    }
+
     landing_step(m, MARIO_ANIM_GROUND_POUND_LANDING, ACT_BUTT_SLIDE_STOP);
     return false;
 }
@@ -1081,6 +1099,51 @@ s32 act_first_person(MarioState* m) {
     stationary_ground_step(m);
     set_mario_animation(m, MARIO_ANIM_FIRST_PERSON);
     return false;
+}
+
+s32 act_spin_pound_land(MarioState* m) {
+    m.actionState = 1;
+
+    if (m.actionTimer <= 8) {
+        if (m.input & INPUT_UNKNOWN_10) {
+            return drop_and_set_mario_action(m, ACT_SHOCKWAVE_BOUNCE, 0);
+        }
+
+        if (m.input & INPUT_OFF_FLOOR) {
+            return set_mario_action(m, ACT_FREEFALL, 0);
+        }
+
+        if (m.input & INPUT_ABOVE_SLIDE) {
+            return set_mario_action(m, ACT_BUTT_SLIDE, 0);
+        }
+
+        if (m.input & INPUT_A_PRESSED) {
+            return set_jumping_action(m, ACT_GROUND_POUND_JUMP, 0);
+        }
+
+        if (m.controller.buttonPressed & R_TRIG) {
+            mario_set_forward_vel(m, 60);
+            play_sound(SOUND_ACTION_SPIN, m.marioObj.header.gfx.cameraToObject.ptr);
+            return set_mario_action(m, ACT_ROLL, 0);
+        }
+
+        stationary_ground_step(m);
+        set_mario_animation(m, MARIO_ANIM_LAND_FROM_DOUBLE_JUMP);
+    } else {
+        if (m.input & INPUT_UNKNOWN_10) {
+            return set_mario_action(m, ACT_SHOCKWAVE_BOUNCE, 0);
+        }
+
+        if (m.input & (INPUT_NONZERO_ANALOG | INPUT_A_PRESSED | INPUT_OFF_FLOOR | INPUT_ABOVE_SLIDE)) {
+            return check_common_action_exits(m);
+        }
+
+        stopping_step(m, MARIO_ANIM_LAND_FROM_DOUBLE_JUMP, ACT_IDLE);
+    }
+
+    m.actionTimer++;
+
+    return 0;
 }
 
 s32 check_common_stationary_cancels(MarioState* m) {
@@ -1146,6 +1209,7 @@ s32 mario_execute_stationary_action(MarioState* m) {
         case ACT_HOLD_JUMP_LAND_STOP:     cancel = act_hold_jump_land_stop(m);              break;
         case ACT_HOLD_FREEFALL_LAND_STOP: cancel = act_hold_freefall_land_stop(m);          break;
         case ACT_AIR_THROW_LAND:          cancel = act_air_throw_land(m);                   break;
+        case ACT_SPIN_POUND_LAND:         cancel = act_spin_pound_land(m);                  break;
         case ACT_LAVA_BOOST_LAND:         cancel = act_lava_boost_land(m);                  break;
         case ACT_TWIRL_LAND:              cancel = act_twirl_land(m);                       break;
         case ACT_TRIPLE_JUMP_LAND_STOP:   cancel = act_triple_jump_land_stop(m);            break;

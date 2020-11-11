@@ -559,6 +559,28 @@ void apply_gravity(MarioState* m) {
         if (m.vel[1] < -75.0f) {
             m.vel[1] = -75.0f;
         }
+    } else if (m.action == ACT_SPIN_JUMP) {
+        if ((m.flags & MARIO_WING_CAP) && m.vel[1] < 0.0f && (m.input & INPUT_A_DOWN)) {
+            m.marioBodyState.wingFlutter = true;
+            m.vel[1] -= 0.7f;
+            if (m.vel[1] < -37.5f) {
+                if ((m.vel[1] += 1.4f) > -37.5f) {
+                    m.vel[1] = -37.5f;
+                }
+            }
+        }
+        else
+        {
+            m.vel[1] -= (m.vel[1] > 0.0f) ? 4.0f : 1.4f;
+            if (m.vel[1] < -75.0f) {
+                m.vel[1] = -75.5f;
+            }
+        }
+    } else if (m.action == ACT_WALL_SLIDE) {
+        m.vel[1] -= 2.0f;
+        if (m.vel[1] < -15.0f) {
+            m.vel[1] = -15.0f;
+        }
     } else if (m.action == ACT_LAVA_BOOST || m.action == ACT_FALL_AFTER_STAR_GRAB) {
         m.vel[1] -= 3.2f;
         if (m.vel[1] < -65.0f) {

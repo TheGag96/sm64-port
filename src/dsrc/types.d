@@ -18,19 +18,23 @@ import ultra64, game.area, game.camera, game.object_helpers, mario_geo_switch_ca
 //    #define BAD_RETURN(cmd) cmd
 //#endif
 
+enum ANGLE_QUEUE_SIZE = 9;
+
 struct Controller
 {
-  /*0x00*/ s16 rawStickX;       //
-  /*0x02*/ s16 rawStickY;       //
-  /*0x04*/ float stickX;        // [-64, 64] positive is right
-  /*0x08*/ float stickY;        // [-64, 64] positive is up
-  /*0x0C*/ float stickMag;      // distance from center [0, 64]
-  /*0x10*/ u16 buttonDown;
-  /*0x12*/ u16 buttonPressed;
-  /*0x14*/ OSContStatus* statusData;
-  /*0x18*/ OSContPad* controllerData;
+  /*0x00*/ s32[ANGLE_QUEUE_SIZE] angleDeltaQueue;
+  /*0x24*/ s16 rawStickX;       //
+  /*0x26*/ s16 rawStickY;       //
+  /*0x28*/ float stickX;        // [-64, 64] positive is right
+  /*0x2C*/ float stickY;        // [-64, 64] positive is up
+  /*0x30*/ float stickMag;      // distance from center [0, 64]
+  /*0x34*/ u16 buttonDown;
+  /*0x36*/ u16 buttonPressed;
+  /*0x38*/ OSContStatus* statusData;
+  /*0x3C*/ OSContPad* controllerData;
+  /*0x40*/ s16 stickLastAngle;
   version (SM64_SH) {
-    /*0x1C*/ int port;
+    /*0x42*/ int port;
   }
 }
 
@@ -346,6 +350,10 @@ struct MarioState
     /*0xBC*/ f32 peakHeight;
     /*0xC0*/ f32 quicksandDepth;
     /*0xC4*/ f32 unkC4;
+    /*0xC8*/ f32 spareFloat;
+    /*0xCC*/ s32 spareInt;
+    /*0xD0*/ s16 spinDirection;
+    /*0xD2*/ u16 spinBufferTimer;
 };
 
 public import object_fields;
