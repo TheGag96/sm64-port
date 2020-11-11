@@ -4,15 +4,21 @@ import sm64, surface_terrains, behavior_data, course_table, level_table, util, g
        seq_ids, model_ids, macros, main,
        audio.external,
        engine.surface_collision, engine.math_util, engine.graph_node,
-       game.camera, game.mario_step, game.interaction, game.level_update, game.save_file, game.game_init,
+       game.camera, game.interaction, game.level_update, game.save_file, game.game_init,
        game.memory, game.area, game.sound_init, game.object_list_processor, game.ingame_menu, game.object_helpers,
-       game.level_update, game.moving_texture, game.print, game.behavior_actions, game.mario_misc,
-       game.mario_actions_stationary, game.mario_actions_moving, game.mario_actions_airborne,
-       game.mario_actions_submerged, game.mario_actions_cutscene, game.mario_actions_automatic;
+       game.level_update, game.moving_texture, game.print, game.behavior_actions;
 
 public import mario_animation_ids;
 public import mario_geo_switch_case_ids;
+public import game.mario_actions_airborne;
+public import game.mario_actions_automatic;
+public import game.mario_actions_cutscene;
+public import game.mario_actions_moving;
 public import game.mario_actions_object;
+public import game.mario_actions_stationary;
+public import game.mario_actions_submerged;
+public import game.mario_misc;
+public import game.mario_step;
 
 extern (C):
 
