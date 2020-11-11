@@ -26,6 +26,7 @@ static void xinput_read(OSContPad *pad) {
             if (gp->wButtons & XINPUT_GAMEPAD_A) pad->button |= A_BUTTON;
             if (gp->wButtons & XINPUT_GAMEPAD_X) pad->button |= B_BUTTON;
             if (gp->wButtons & XINPUT_GAMEPAD_DPAD_LEFT) pad->button |= L_TRIG;
+            if (gp->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) pad->button |= R_JPAD;
             if (gp->sThumbRX < -0x4000) pad->button |= L_CBUTTONS;
             if (gp->sThumbRX > 0x4000) pad->button |= R_CBUTTONS;
             if (gp->sThumbRY < -0x4000) pad->button |= D_CBUTTONS;

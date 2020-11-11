@@ -30,6 +30,7 @@ static void controller_wup_read(OSContPad *pad) {
         if (buttons & 0x0100) pad->button |= A_BUTTON;
         if (buttons & 0x0200) pad->button |= B_BUTTON;
         if (buttons & 0x1000) pad->button |= L_TRIG;
+        if (buttons & 0x2000) pad->button |= R_JPAD;
         if (axis[2] < 0x40) pad->button |= L_CBUTTONS;
         if (axis[2] > 0xC0) pad->button |= R_CBUTTONS;
         if (axis[3] < 0x40) pad->button |= D_CBUTTONS;

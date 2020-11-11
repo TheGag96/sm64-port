@@ -1764,7 +1764,7 @@ s32 update_behind_mario_camera(struct Camera *c, Vec3f focus, Vec3f pos) {
     f32 maxDist = 800.f;
     f32 focYOff = 125.f;
 
-    // Zoom in when Mario R_TRIG mode is active
+    // Zoom in when Mario R_JPAD mode is active
     if (sSelectionFlags & CAM_MODE_MARIO_ACTIVE) {
         maxDist = 350.f;
         focYOff = 120.f;
@@ -3011,9 +3011,9 @@ void update_camera(struct Camera *c) {
     gCamera = c;
     update_camera_hud_status(c);
     if (c->cutscene == 0) {
-        // Only process R_TRIG if 'fixed' is not selected in the menu
+        // Only process R_JPAD if 'fixed' is not selected in the menu
         if (cam_select_alt_mode(0) == CAM_SELECTION_MARIO) {
-            if (gPlayer1Controller->buttonPressed & R_TRIG) {
+            if (gPlayer1Controller->buttonPressed & R_JPAD) {
                 if (set_cam_angle(0) == CAM_ANGLE_LAKITU) {
                     set_cam_angle(CAM_ANGLE_MARIO);
                 } else {
@@ -3161,19 +3161,19 @@ void update_camera(struct Camera *c) {
         // If fixed camera is selected as the alternate mode, then fix the camera as long as the right
         // trigger is held
         if ((c->cutscene == 0 &&
-            (gPlayer1Controller->buttonDown & R_TRIG) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED)
+            (gPlayer1Controller->buttonDown & R_JPAD) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED)
             || (gCameraMovementFlags & CAM_MOVE_FIX_IN_PLACE)
             || (sMarioCamState->action) == ACT_GETTING_BLOWN) {
 
-            // If this is the first frame that R_TRIG is held, play the "click" sound
-            if (c->cutscene == 0 && (gPlayer1Controller->buttonPressed & R_TRIG)
+            // If this is the first frame that R_JPAD is held, play the "click" sound
+            if (c->cutscene == 0 && (gPlayer1Controller->buttonPressed & R_JPAD)
                 && cam_select_alt_mode(0) == CAM_SELECTION_FIXED) {
                 sCameraSoundFlags |= CAM_SOUND_FIXED_ACTIVE;
                 play_sound_rbutton_changed();
             }
 
             // Fixed mode only prevents Lakitu from moving. The camera pos still updates, so
-            // Lakitu will fly to his next position as normal whenever R_TRIG is released.
+            // Lakitu will fly to his next position as normal whenever R_JPAD is released.
             gLakituState.posHSpeed = 0.f;
             gLakituState.posVSpeed = 0.f;
 
@@ -3188,7 +3188,7 @@ void update_camera(struct Camera *c) {
             }
         }
     } else {
-        if ((gPlayer1Controller->buttonPressed & R_TRIG) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED) {
+        if ((gPlayer1Controller->buttonPressed & R_JPAD) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED) {
             play_sound_button_change_blocked();
         }
     }
@@ -3889,7 +3889,7 @@ s32 update_camera_hud_status(struct Camera *c) {
     s16 status = CAM_STATUS_NONE;
 
     if (c->cutscene != 0
-        || ((gPlayer1Controller->buttonDown & R_TRIG) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED)) {
+        || ((gPlayer1Controller->buttonDown & R_JPAD) && cam_select_alt_mode(0) == CAM_SELECTION_FIXED)) {
         status |= CAM_STATUS_FIXED;
     } else if (set_cam_angle(0) == CAM_ANGLE_MARIO) {
         status |= CAM_STATUS_MARIO;
